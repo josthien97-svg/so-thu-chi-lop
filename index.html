@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sổ Quỹ Lớp K31</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --bg:#F5F3EE;
+    --surface:#FFFFFF;
+    --surface-alt:#FBFAF8;
+    --ink:#23292E;
+    --ink-muted:#767C82;
+    --border:#E2DFD6;
+    --accent:#0F5C4E;
+    --accent-dark:#0C4A3E;
+    --accent-soft:#E4EFEC;
+    --thu:#1F7A4D;
+    --thu-soft:#E7F5EC;
+    --chi:#B3432B;
+    --chi-soft:#FBEAE5;
+    --radius:14px;
+    --radius-sm:9px;
+    --shadow:0 1px 2px rgba(35,41,46,.05), 0 10px 28px rgba(35,41,46,.07);
+    --font:'Be Vietnam Pro',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  }
+  body.dark{
+    --bg:#1B1F22;
+    --surface:#23282C;
+    --surface-alt:#2A3034;
+    --ink:#E8E6E0;
+    --ink-muted:#9AA0A6;
+    --border:#3A4046;
+    --accent:#2FA88A;
+    --accent-dark:#3FC2A0;
+    --accent-soft:rgba(47,168,138,.16);
+    --thu:#5BC190;
+    --thu-soft:rgba(91,193,144,.14);
+    --chi:#E88A67;
+    --chi-soft:rgba(232,138,103,.14);
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.35);
+  }
+  body.dark .modal-overlay{background:rgba(0,0,0,.6);}
+  body.dark .topbar{background:rgba(27,31,34,.92);}
+  #bg-layer{position:fixed;inset:0;z-index:-1;background-repeat:no-repeat;background-position:center;pointer-events:none;opacity:0;transition:opacity .2s;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+  #app{max-width:980px;margin:0 auto;padding:20px 16px 80px;}
+  .tnum{font-variant-numeric:tabular-nums;}
+  button{font-family:var(--font);cursor:pointer;}
+  input,select{font-family:var(--font);}
+
+  /* Header */
+  .topbar{position:sticky;top:0;z-index:10;background:rgba(245,243,238,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .topbar-utility{max-width:980px;margin:0 auto;padding:7px 16px;display:flex;align-items:center;justify-content:flex-end;gap:6px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+  .topbar-inner{max-width:980px;margin:0 auto;padding:14px 16px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;}
+  .topbar-left{display:flex;align-items:center;justify-self:start;}
+  .topbar-right{display:flex;align-items:center;gap:8px;justify-self:end;}
+  .brand{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;}
+  .brand-mark{width:34px;height:34px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;margin-bottom:2px;}
+  .brand-text{display:flex;flex-direction:column;align-items:center;line-height:1.2;}
+  .brand-text b{font-size:20px;font-weight:800;letter-spacing:.02em;color:var(--accent-dark);white-space:nowrap;}
+  .brand-text span{font-size:12px;color:var(--ink-muted);font-weight:500;}
+  .auth-area{display:flex;align-items:center;gap:8px;}
+  .pill{font-size:12.5px;padding:5px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent-dark);font-weight:600;}
+
+  /* Buttons */
+  .btn{border:1px solid var(--border);background:var(--surface);color:var(--ink);padding:9px 14px;border-radius:var(--radius-sm);font-size:13.5px;font-weight:600;transition:.15s;white-space:nowrap;}
+  .btn:hover{border-color:#c9c4b6;}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .btn-primary:hover{background:var(--accent-dark);}
+  .btn-ghost{background:transparent;border-color:transparent;color:var(--ink-muted);}
+  .btn-ghost:hover{background:var(--surface-alt);color:var(--ink);}
+  .btn-danger{color:var(--chi);}
+  .btn-sm{padding:6px 10px;font-size:12.5px;}
+  .icon-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--surface);display:inline-flex;align-items:center;justify-content:center;padding:0;color:var(--ink-muted);}
+  .icon-btn:hover{color:var(--ink);border-color:#c9c4b6;}
+
+  /* Layout helpers */
+  .row{display:flex;align-items:center;gap:10px;}
+  .between{justify-content:space-between;}
+  .crumb{display:flex;align-items:center;gap:6px;color:var(--ink-muted);font-size:13px;margin-bottom:14px;}
+  .crumb a{color:var(--accent-dark);text-decoration:none;font-weight:600;cursor:pointer;}
+  h1.page-title{font-size:22px;margin:0 0 4px;font-weight:800;letter-spacing:-.01em;}
+  .subtitle{color:var(--ink-muted);font-size:13.5px;margin:0 0 18px;}
+
+  /* Summary panel (ledger-stripe signature) */
+  .summary{
+    border-radius:var(--radius);border:1px solid var(--border);
+    background:
+      repeating-linear-gradient(180deg, rgba(15,92,78,.035) 0px, rgba(15,92,78,.035) 1px, transparent 1px, transparent 34px),
+      var(--surface);
+    padding:18px;margin-bottom:18px;box-shadow:var(--shadow);
+  }
+  .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;}
+  .stat-label{font-size:12px;color:var(--ink-muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
+  .stat-value{font-size:20px;font-weight:800;letter-spacing:-.01em;}
+  .stat-value.thu{color:var(--thu);}
+  .stat-value.chi{color:var(--chi);}
+  .stat-value.balance{color:var(--accent-dark);}
+  .stat-value.muted{color:var(--ink);}
+
+  /* Year cards / month grid */
+  .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;}
+  .year-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);cursor:pointer;transition:.15s;}
+  .year-card:hover{border-color:var(--accent);transform:translateY(-1px);}
+  .year-card .yl{font-size:17px;font-weight:800;margin-bottom:8px;}
+  .year-card .yb{font-size:13px;color:var(--ink-muted);}
+  .year-card .yb b{color:var(--accent-dark);}
+  .year-card.add-year-card{display:flex;align-items:center;justify-content:center;border-style:dashed;color:var(--ink-muted);min-height:64px;}
+  .year-card.add-year-card .plus{font-size:32px;font-weight:300;line-height:1;}
+  .year-card.add-year-card:hover{color:var(--accent);border-color:var(--accent);}
+
+  .month-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+  .month-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;cursor:pointer;transition:.15s;}
+  .month-tile:hover{border-color:var(--accent);transform:translateY(-1px);}
+  .month-tile .ml{font-weight:700;font-size:14.5px;margin-bottom:8px;}
+  .month-tile .mrow{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-muted);margin-top:3px;}
+  .month-tile .mrow b{font-weight:700;}
+  .month-tile .mrow.thu b{color:var(--thu);}
+  .month-tile .mrow.chi b{color:var(--chi);}
+
+  /* Section box */
+  .section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:18px;box-shadow:var(--shadow);}
+  .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .section-head h2{font-size:15.5px;margin:0;font-weight:700;}
+  .empty-state{text-align:center;padding:26px 10px;color:var(--ink-muted);font-size:13.5px;}
+
+  /* Table */
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:640px;}
+  th{text-align:left;font-size:11.5px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.03em;font-weight:700;padding:8px 10px;border-bottom:2px solid var(--border);}
+  td{padding:10px 10px;border-bottom:1px solid var(--border);vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  td.num{text-align:right;font-weight:600;}
+  td.thu{color:var(--thu);}
+  td.chi{color:var(--chi);}
+  td.actions{text-align:right;white-space:nowrap;}
+  td.stt{color:var(--ink-muted);}
+  .note-txt{color:var(--ink-muted);font-size:12.5px;}
+  .note-sub{color:var(--ink-muted);font-size:12px;margin-top:2px;}
+  .qa-note-sub{display:block;margin-top:3px;font-size:12px;color:var(--ink-muted);}
+  .qa-tk-label{display:flex;align-items:center;gap:5px;margin-top:5px;font-size:11.5px;color:var(--ink-muted);cursor:pointer;user-select:none;}
+  .qa-tk-label input{width:13px;height:13px;cursor:pointer;}
+  td.content-thu{font-weight:700;}
+
+  /* Quick-add row (Excel-style, revealed on hover of last row) */
+  tr.add-row{opacity:0;transition:opacity .12s ease;pointer-events:none;background:var(--surface-alt);}
+  tr.add-row.always{opacity:1;pointer-events:auto;}
+  tr.tx-last:hover + tr.add-row{opacity:1;pointer-events:auto;}
+  tr.add-row:hover, tr.add-row:focus-within{opacity:1;pointer-events:auto;}
+  .qa-input{width:100%;border:1px solid transparent;background:transparent;padding:5px 6px;border-radius:6px;font-size:13.5px;font-family:var(--font);color:var(--ink);}
+  .qa-input:hover{background:var(--surface);border-color:var(--border);}
+  .qa-input:focus{background:var(--surface);border-color:var(--accent);outline:none;}
+  input.qa-input.qa-thu{color:var(--thu);text-align:right;}
+  input.qa-input.qa-chi{color:var(--chi);text-align:right;}
+  tr.total-row td{background:var(--surface-alt);border-top:2px solid var(--border);font-size:13.5px;}
+  .qa-save{color:var(--accent-dark);border-color:var(--accent);}
+  tr.edit-row{background:var(--accent-soft);}
+  td.editable-cell{cursor:pointer;border-radius:6px;}
+  td.editable-cell:hover{background:var(--surface-alt);box-shadow:inset 0 0 0 1px var(--border);}
+
+  /* Holdings list */
+  .hold-item{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);}
+  .hold-item:last-child{border-bottom:none;}
+  .hold-name{font-weight:700;font-size:13.5px;}
+  .hold-note{font-size:12px;color:var(--ink-muted);}
+  .hold-amount{font-weight:700;color:var(--accent-dark);}
+
+  /* Modal */
+  .modal-overlay{position:fixed;inset:0;background:rgba(35,41,46,.42);display:flex;align-items:center;justify-content:center;padding:16px;z-index:100;}
+  .modal-box{background:var(--surface);border-radius:var(--radius);max-width:420px;width:100%;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25);max-height:88vh;overflow-y:auto;}
+  .modal-box h3{margin:0 0 16px;font-size:17px;font-weight:800;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;font-weight:700;color:var(--ink-muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.03em;}
+  .field input[type=text],.field input[type=number],.field input[type=date],.field input[type=password]{
+    width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--surface-alt);color:var(--ink);
+  }
+  .field input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
+  .seg{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .seg button{flex:1;padding:9px;border:none;background:var(--surface-alt);font-weight:700;font-size:13.5px;color:var(--ink-muted);}
+  .seg button.active.thu-a{background:var(--thu-soft);color:var(--thu);}
+  .seg button.active.chi-a{background:var(--chi-soft);color:var(--chi);}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
+  .modal-msg{font-size:13px;color:var(--chi);margin-top:-6px;margin-bottom:12px;min-height:0;}
+  .helptext{font-size:12px;color:var(--ink-muted);margin-top:6px;}
+
+  /* Toast */
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:.2s;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.2);}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .footer-note{text-align:center;color:var(--ink-muted);font-size:12px;margin-top:26px;line-height:1.6;}
+
+  .fab-login{position:fixed;bottom:22px;right:22px;width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;border:none;box-shadow:0 6px 20px rgba(15,92,78,.35);cursor:pointer;z-index:50;transition:.15s;}
+  .fab-login:hover{background:var(--accent-dark);transform:translateY(-2px);}
+
+  /* Print preview */
+  .print-toolbar{display:flex;justify-content:space-between;max-width:820px;margin:0 auto 14px;}
+  .print-sheet{background:#fff;max-width:820px;margin:0 auto 40px;padding:36px 40px;border:1px solid var(--border);box-shadow:var(--shadow);border-radius:10px;}
+  .print-head{text-align:center;margin-bottom:20px;}
+  .print-title{font-size:19px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;}
+  .print-sub{font-size:14px;color:var(--ink-muted);margin-top:2px;}
+  .print-date{font-size:11.5px;color:var(--ink-muted);margin-top:6px;}
+  table.print-table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px;}
+  table.print-table th, table.print-table td{border:1px solid #ccc;padding:6px 8px;}
+  table.print-table th{background:#f2f1ec;font-size:11px;text-transform:uppercase;}
+  table.print-table td.num{text-align:right;}
+  .print-summary{display:flex;gap:26px;justify-content:flex-end;margin-top:14px;font-size:13.5px;}
+  .sig-grid{display:flex;justify-content:space-around;margin-top:56px;}
+  .sig-box{text-align:center;width:220px;}
+  .sig-box .role{font-weight:700;font-size:13px;}
+  .sig-box .sig-space{height:60px;}
+  .sig-box .line{border-top:1px solid #999;}
+  .sig-box .hint{font-size:11px;color:var(--ink-muted);padding-top:4px;}
+
+  @media (max-width:520px){
+    h1.page-title{font-size:19px;}
+  }
+
+  @media print{
+    .no-print{display:none !important;}
+    body{background:#fff;}
+    .summary{box-shadow:none;background:#fff;}
+    .section{box-shadow:none;border:1px solid #ccc;}
+    .print-sheet{box-shadow:none;border:none;padding:0;}
+  }
+</style>
+</head>
+<body>
+<div id="bg-layer"></div>
+<div id="app"></div>
+<div id="modal-root"></div>
+<div id="toast"></div>
+
+<script>
+/* ============ DATA MODEL ============ */
+const MONTH_DEFS = [
+  {key:'t8', num:8, label:'Tháng 8'}, {key:'t9', num:9, label:'Tháng 9'},
+  {key:'t10',num:10,label:'Tháng 10'},{key:'t11',num:11,label:'Tháng 11'},
+  {key:'t12',num:12,label:'Tháng 12'},{key:'t1', num:1, label:'Tháng 1'},
+  {key:'t2', num:2, label:'Tháng 2'}, {key:'t3', num:3, label:'Tháng 3'},
+  {key:'t4', num:4, label:'Tháng 4'}, {key:'t5', num:5, label:'Tháng 5'},
+  {key:'t6', num:6, label:'Tháng 6'}, {key:'t7', num:7, label:'Tháng 7'}
+];
+
+let appData = null;
+let isAdmin = false;
+let currentView = {type:'home'};
+let editingTx = null; // {yearKey, monthKey, txId}
+let theme = 'light';
+let adminPassword = null; // chỉ giữ trong bộ nhớ khi đang đăng nhập, không lưu vào máy
+
+function genId(){ return 'id'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+function emptyMonths(){
+  const o={}; MONTH_DEFS.forEach(m=> o[m.key]={transactions:[]}); return o;
+}
+function makeYear(startYear){
+  return { startYear, label:`${startYear} - ${startYear+1}`, months:emptyMonths() };
+}
+function defaultData(){
+  // Chỉ dùng khi KHÔNG kết nối được máy chủ (dữ liệu thật nằm trên server/database).
+  const y = makeYear(2026);
+  return { title:'Của tôi', settings:{background:null}, years:{ '2026': y },
+    holdings:[
+      {id:genId(), kind:'cash', name:'Tiền mặt', opening:0, note:''},
+      {id:genId(), kind:'bank', name:'Tài khoản', opening:0, note:''}
+    ], editLog:[] };
+}
+
+/* ============ STORAGE (gọi API của server, không dùng window.storage nữa) ============ */
+function normalizeData(){
+  // Vá dữ liệu cũ để tránh lỗi và không mất dữ liệu khi nâng cấp tính năng.
+  if(!Array.isArray(appData.holdings)){
+    let migrated = [];
+    Object.values(appData.years||{}).forEach(y=>{
+      if(Array.isArray(y.holdings)){ migrated = migrated.concat(y.holdings); delete y.holdings; }
+    });
+    appData.holdings = migrated;
+  }
+  if(!appData.years) appData.years = {};
+  if(!appData.settings) appData.settings = {};
+  if(!appData.title) appData.title = 'Của tôi';
+  // Đảm bảo luôn có đúng 1 mục "Tiền mặt" (kind:cash) và 1 mục "Tài khoản" (kind:bank), tự động cộng dồn từ giao dịch.
+  let cash = appData.holdings.find(h=>h.kind==='cash');
+  if(!cash){
+    const guess = appData.holdings.find(h=> !h.kind && /tiền mặt|tien mat/i.test(h.name||''));
+    if(guess){ guess.kind='cash'; guess.opening = Number(guess.amount)||0; delete guess.amount; if(!guess.name) guess.name='Tiền mặt'; }
+    else{ appData.holdings.unshift({id:genId(), kind:'cash', name:'Tiền mặt', opening:0, note:''}); }
+  }
+  let bank = appData.holdings.find(h=>h.kind==='bank');
+  if(!bank){
+    const guess = appData.holdings.find(h=> !h.kind && h.kind!=='cash' && /tài khoản|ngân hàng|tai khoan/i.test(h.name||''));
+    if(guess){ guess.kind='bank'; guess.opening = Number(guess.amount)||0; delete guess.amount; }
+    else{ appData.holdings.splice(1,0,{id:genId(), kind:'bank', name:'Tài khoản', opening:0, note:''}); }
+  }
+  appData.holdings.forEach(h=>{ if(!h.kind) h.kind='other'; });
+  if(!Array.isArray(appData.editLog)) appData.editLog = [];
+}
+async function loadData(){
+  try{
+    const res = await fetch('/api/data');
+    if(!res.ok) throw new Error('fetch_failed');
+    appData = await res.json();
+    normalizeData();
+  }catch(e){
+    appData = defaultData();
+    showToast('Không kết nối được máy chủ — đang hiển thị dữ liệu tạm thời.');
+  }
+}
+async function persist(){
+  try{
+    const res = await fetch('/api/data', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ password: adminPassword, data: appData })
+    });
+    if(!res.ok){
+      if(res.status===401){ showToast('Phiên đăng nhập đã hết — vui lòng đăng nhập lại rồi thử lưu lại.'); isAdmin=false; adminPassword=null; computeAndApplyTheme(); render(); }
+      else{ showToast('Không lưu được dữ liệu lên máy chủ.'); }
+    }
+  }catch(e){
+    showToast('Không lưu được — kiểm tra kết nối mạng rồi thử lại.');
+  }
+}
+function commit(){ render(); persist(); }
+
+const systemDarkMQ = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+function loadTheme(){
+  try{ theme = localStorage.getItem('theme-pref')==='dark' ? 'dark' : 'light'; }
+  catch(e){ theme = 'light'; }
+}
+function computeAndApplyTheme(){
+  // Admin: theo lựa chọn thủ công đã lưu (localStorage của trình duyệt). Người xem: tự động theo giao diện sáng/tối của hệ thống máy.
+  const dark = isAdmin ? (theme==='dark') : !!(systemDarkMQ && systemDarkMQ.matches);
+  document.body.classList.toggle('dark', dark);
+}
+function toggleTheme(){
+  theme = theme==='dark' ? 'light' : 'dark';
+  try{ localStorage.setItem('theme-pref', theme); }catch(e){}
+  computeAndApplyTheme();
+  render();
+}
+
+/* ============ BACKGROUND (chỉ Admin tùy chỉnh, mọi người đều thấy) ============ */
+function applyBackgroundRaw(bg){
+  const el = document.getElementById('bg-layer');
+  if(!el) return;
+  if(!bg || !bg.dataUrl){ el.style.opacity = 0; el.style.backgroundImage=''; return; }
+  el.style.backgroundImage = `url("${bg.dataUrl}")`;
+  el.style.backgroundSize = bg.mode==='contain' ? 'contain' : (bg.mode==='repeat' ? 'auto' : 'cover');
+  el.style.backgroundRepeat = bg.mode==='repeat' ? 'repeat' : 'no-repeat';
+  el.style.filter = `brightness(${bg.brightness||100}%)`;
+  el.style.opacity = (bg.opacity!=null ? bg.opacity : 60) / 100;
+}
+function applyBackground(){ applyBackgroundRaw(appData.settings.background); }
+function readBgFormLive(){
+  return {
+    opacity: parseInt(document.getElementById('bg-opacity').value,10),
+    brightness: parseInt(document.getElementById('bg-brightness').value,10),
+    mode: document.getElementById('bg-mode').value
+  };
+}
+function previewBackgroundLive(){
+  const cur = appData.settings.background;
+  applyBackgroundRaw({ dataUrl: cur ? cur.dataUrl : null, ...readBgFormLive() });
+}
+function commitBackgroundSettings(){
+  if(!appData.settings.background) return;
+  Object.assign(appData.settings.background, readBgFormLive());
+  persist();
+}
+function handleBackgroundFile(inputEl){
+  const file = inputEl.files && inputEl.files[0];
+  if(!file) return;
+  if(!file.type.startsWith('image/')){ showToast('Vui lòng chọn một file ảnh.'); return; }
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const maxW = 1600;
+      let w = img.width, h = img.height;
+      if(w>maxW){ h = Math.round(h*(maxW/w)); w = maxW; }
+      const canvas = document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+      const existing = appData.settings.background || {opacity:60, brightness:100, mode:'cover'};
+      appData.settings.background = {...existing, dataUrl};
+      applyBackground();
+      persist();
+      showToast('Đã cập nhật ảnh nền.');
+      mSettings();
+    };
+    img.onerror = ()=> showToast('Không đọc được ảnh này.');
+    img.src = e.target.result;
+  };
+  reader.onerror = ()=> showToast('Không đọc được file.');
+  reader.readAsDataURL(file);
+  inputEl.value='';
+}
+function removeBackground(){
+  appData.settings.background = null;
+  applyBackground();
+  persist();
+  showToast('Đã xóa ảnh nền.');
+  mSettings();
+}
+
+/* ============ HELPERS ============ */
+function money(n){ return (Math.round(Number(n)||0)).toLocaleString('vi-VN') + ' đ'; }
+function dispDate(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('-'); return `${d}/${m}`; }
+function todayISO(){ const d=new Date(); const off=d.getTimezoneOffset(); return new Date(d.getTime()-off*60000).toISOString().slice(0,10); }
+function todayFull(){ const [y,m,d]=todayISO().split('-'); return `${d}/${m}/${y}`; }
+function nowStamp(){ const d=new Date(); const dd=String(d.getDate()).padStart(2,'0'); const mm=String(d.getMonth()+1).padStart(2,'0'); const yy=d.getFullYear(); const hh=String(d.getHours()).padStart(2,'0'); const mi=String(d.getMinutes()).padStart(2,'0'); return `${dd}/${mm}/${yy} ${hh}:${mi}`; }
+function logEdit(yearKey, monthKey, message){
+  if(!Array.isArray(appData.editLog)) appData.editLog=[];
+  const monthDef = MONTH_DEFS.find(m=>m.key===monthKey);
+  const year = appData.years[yearKey];
+  appData.editLog.unshift({id:genId(), ts:nowStamp(), yearKey, monthKey, monthLabel: monthDef?monthDef.label:'', yearLabel: year?year.label:'', message});
+  if(appData.editLog.length>300) appData.editLog.length=300;
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function monthYearNum(startYear, monthKey){ const m=MONTH_DEFS.find(x=>x.key===monthKey); return m.num>=8? startYear : startYear+1; }
+function sortedYearKeys(){ return Object.keys(appData.years).sort((a,b)=> a-b); }
+function monthTotals(year, monthKey){
+  const txs = year.months[monthKey].transactions;
+  let thu=0, chi=0;
+  txs.forEach(t=> t.type==='thu' ? thu+=Number(t.amount)||0 : chi+=Number(t.amount)||0);
+  return {thu, chi, conLai: thu-chi};
+}
+function yearTotals(year){
+  let thu=0, chi=0;
+  MONTH_DEFS.forEach(m=>{ const t=monthTotals(year, m.key); thu+=t.thu; chi+=t.chi; });
+  return {thu, chi, conLai: thu-chi};
+}
+function allTimeTotals(){
+  let thu=0, chi=0;
+  Object.values(appData.years).forEach(year=>{ const t=yearTotals(year); thu+=t.thu; chi+=t.chi; });
+  return {thu, chi, conLai: thu-chi};
+}
+// Tổng cộng dồn (Thu - Chi) của tất cả giao dịch được gắn vào một nơi giữ tiền cụ thể ('tienmat' hoặc 'taikhoan')
+function locationNet(locationKey){
+  let net = 0;
+  Object.values(appData.years).forEach(year=>{
+    MONTH_DEFS.forEach(m=>{
+      year.months[m.key].transactions.forEach(tx=>{
+        const loc = tx.location || 'tienmat';
+        if(loc !== locationKey) return;
+        net += tx.type==='thu' ? (Number(tx.amount)||0) : -(Number(tx.amount)||0);
+      });
+    });
+  });
+  return net;
+}
+function holdingAmount(h){
+  if(h.kind==='cash') return (Number(h.opening)||0) + locationNet('tienmat');
+  if(h.kind==='bank') return (Number(h.opening)||0) + locationNet('taikhoan');
+  return Number(h.amount)||0;
+}
+function holdingsTotal(){ return appData.holdings.reduce((s,h)=> s+holdingAmount(h), 0); }
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=> el.classList.remove('show'), 2600);
+}
+function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
+
+/* ============ RENDER: SHELL ============ */
+let pendingFocusQuickAdd = false;
+function render(){
+  document.getElementById('app').innerHTML = renderTopbar() + renderView() + (!isAdmin ? `<button class="fab-login no-print" data-action="open-login" title="Đăng nhập Admin">🔑</button>` : '');
+  bindGlobalActions();
+  if(pendingFocusQuickAdd){
+    pendingFocusQuickAdd = false;
+    const d = document.querySelector('.add-row .qa-date');
+    if(d) d.focus();
+  }
+  if(editingTx){
+    const c = document.querySelector('tr.edit-row .qa-content');
+    if(c) c.focus();
+  }
+}
+
+function renderTopbar(){
+  return `
+  <div class="topbar no-print">
+    ${isAdmin ? `
+    <div class="topbar-utility">
+      <button class="icon-btn" data-action="toggle-theme" title="Đổi giao diện sáng/tối">${theme==='dark'?'☀️':'🌙'}</button>
+      <button class="btn btn-sm" data-action="open-funds" title="Quản lý quỹ">💰 Quỹ</button>
+      <button class="btn btn-sm" data-action="open-editlog" title="Lịch sử chỉnh sửa">🕘 Lịch sử</button>
+      <button class="btn btn-sm" data-action="open-settings" title="Cài đặt">⚙️ Cài đặt</button>
+      <button class="btn btn-sm btn-ghost" data-action="logout">Đăng xuất</button>
+    </div>` : ``}
+    <div class="topbar-inner">
+      <div class="topbar-left">
+        ${currentView.type!=='home' ? `<button class="icon-btn" title="Quay lại" data-action="go-back">←</button>` : ''}
+      </div>
+      <div class="brand" data-action="go-home" style="cursor:pointer">
+        <div class="brand-mark">📒</div>
+        <div class="brand-text"><b>SỔ THU - CHI</b><span>${esc(appData.title)}</span></div>
+      </div>
+      <div class="topbar-right"></div>
+    </div>
+  </div>`;
+}
+
+function goBack(){
+  if(currentView.type==='month'){ currentView={type:'year', yearKey:currentView.yearKey}; }
+  else if(currentView.type==='year'){ currentView={type:'home'}; }
+  else if(currentView.type==='funds'){ currentView={type:'home'}; }
+  else if(currentView.type==='editlog'){ currentView={type:'home'}; }
+  else if(currentView.type==='print-preview'){ exitPrintPreview(); return; }
+  else{ currentView={type:'home'}; }
+  render();
+}
+function exitPrintPreview(){
+  if(currentView.scope==='month'){ currentView={type:'month', yearKey:currentView.yearKey, monthKey:currentView.monthKey}; }
+  else{ currentView={type:'year', yearKey:currentView.yearKey}; }
+  render();
+}
+
+function renderView(){
+  if((currentView.type==='funds'||currentView.type==='editlog'||currentView.type==='print-preview') && !isAdmin) currentView={type:'home'};
+  if(currentView.type==='home') return renderHome();
+  if(currentView.type==='year') return renderYear(currentView.yearKey);
+  if(currentView.type==='month') return renderMonth(currentView.yearKey, currentView.monthKey);
+  if(currentView.type==='funds') return renderFunds();
+  if(currentView.type==='editlog') return renderEditLog();
+  if(currentView.type==='print-preview') return renderPrintPreview();
+  return renderHome();
+}
+
+/* ============ HOME ============ */
+function renderHome(){
+  const keys = sortedYearKeys();
+  return `
+  <div style="text-align:center;margin-bottom:20px;">
+    <h1 class="page-title">Các Năm Học</h1>
+  </div>
+  ${(keys.length===0 && !isAdmin) ? `<div class="section"><div class="empty-state">Chưa có năm học nào. Vui lòng chờ Admin tạo dữ liệu.</div></div>` : `
+  <div class="card-grid">
+    ${keys.map(k=>{
+      const y=appData.years[k]; const t=yearTotals(y);
+      return `<div class="year-card" data-action="open-year" data-year="${k}">
+        <div class="yl">${esc(y.label)}</div>
+        <div class="yb">Còn lại: <b class="tnum">${money(t.conLai)}</b></div>
+      </div>`;
+    }).join('')}
+    ${isAdmin ? `<div class="year-card add-year-card" data-action="open-new-year" title="Tạo năm học mới"><span class="plus">+</span></div>` : ''}
+  </div>`}
+  ${renderFooter()}
+  `;
+}
+
+/* ============ YEAR ============ */
+function renderYear(yearKey){
+  const year = appData.years[yearKey];
+  if(!year) return renderHome();
+  const t = yearTotals(year);
+  return `
+  <div class="crumb no-print"><a data-action="go-home">Các năm học</a> <span>/</span> <span>${esc(year.label)}</span></div>
+  <div class="row between" style="margin-bottom:4px;">
+    <h1 class="page-title">Thu chi năm học ${esc(year.label)}</h1>
+    ${isAdmin ? `<button class="btn btn-sm no-print" data-action="export-excel-year" data-year="${yearKey}">📊 Xuất Excel</button> <button class="btn btn-sm no-print" data-action="open-print-preview" data-scope="year" data-year="${yearKey}">Xem trước &amp; In</button>` : ''}
+  </div>
+
+  <div class="summary">
+    <div class="summary-grid">
+      <div><div class="stat-label">Tổng thu cả năm</div><div class="stat-value thu tnum">${money(t.thu)}</div></div>
+      <div><div class="stat-label">Tổng chi cả năm</div><div class="stat-value chi tnum">${money(t.chi)}</div></div>
+      <div><div class="stat-label">Còn lại</div><div class="stat-value balance tnum">${money(t.conLai)}</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2>Các tháng</h2>
+    </div>
+    <div class="month-grid">
+      ${MONTH_DEFS.map(m=>{
+        const mt = monthTotals(year, m.key);
+        return `<div class="month-tile" data-action="open-month" data-year="${yearKey}" data-month="${m.key}">
+          <div class="ml">${m.label}</div>
+          <div class="mrow thu"><span>Thu</span><b class="tnum">${money(mt.thu)}</b></div>
+          <div class="mrow chi"><span>Chi</span><b class="tnum">${money(mt.chi)}</b></div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+
+  ${renderFooter()}
+  `;
+}
+
+/* ============ FUNDS (Admin only — where the money currently is) ============ */
+function renderFunds(){
+  const auto = appData.holdings.filter(h=>h.kind==='cash'||h.kind==='bank');
+  const others = appData.holdings.filter(h=>h.kind==='other');
+  const sum = holdingsTotal();
+  const at = allTimeTotals();
+  const diff = at.conLai - sum;
+  return `
+  <div class="crumb no-print"><a data-action="go-home">Trang chủ</a> <span>/</span> <span>Quản lý quỹ</span></div>
+  <h1 class="page-title">Quản lý quỹ</h1>
+
+  <div class="summary">
+    <div class="summary-grid">
+      <div><div class="stat-label">Còn lại theo sổ giao dịch (tất cả các năm)</div><div class="stat-value balance tnum">${money(at.conLai)}</div></div>
+      <div><div class="stat-label">Tổng các khoản đã khai báo bên dưới</div><div class="stat-value muted tnum">${money(sum)}</div></div>
+      <div><div class="stat-label">Chênh lệch</div><div class="stat-value tnum" style="color:${diff===0?'var(--thu)':'var(--chi)'}">${diff===0? 'Đã khớp ✓' : money(diff)}</div></div>
+    </div>
+    ${diff!==0 ? `<p class="helptext" style="color:var(--chi);margin-top:10px;">Chưa khớp — kiểm tra lại các khoản bên dưới so với số dư thực tế (nếu dương: còn thiếu khoản chưa khai báo; nếu âm: đã khai báo dư).</p>` : ''}
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2>Tiền mặt &amp; Tài khoản (tự động theo giao dịch)</h2>
+    </div>
+    ${auto.map(h=>`
+      <div class="hold-item">
+        <div>
+          <div class="hold-name">${esc(h.name)} <span class="pill" style="background:var(--accent-soft);color:var(--accent-dark);font-size:11px;padding:2px 7px;">Tự động</span></div>
+          ${h.note ? `<div class="hold-note">${esc(h.note)}</div>`:''}
+        </div>
+        <div class="row">
+          <div class="hold-amount tnum">${money(holdingAmount(h))}</div>
+          <button class="icon-btn" title="Sửa / điều chỉnh" data-action="edit-holding" data-id="${h.id}">✎</button>
+        </div>
+      </div>
+    `).join('')}
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2>Các khoản khác (người giữ / mượn...)</h2>
+      <button class="btn btn-sm btn-primary" data-action="open-new-holding">+ Thêm khoản</button>
+    </div>
+    ${others.length===0 ? `<div class="empty-state">Chưa có khoản nào. Bấm "+ Thêm khoản" để khai báo, ví dụ: tên người đang giữ/mượn tiền quỹ.</div>` : others.map(h=>`
+      <div class="hold-item">
+        <div>
+          <div class="hold-name">${esc(h.name)}</div>
+          ${h.note ? `<div class="hold-note">${esc(h.note)}</div>`:''}
+        </div>
+        <div class="row">
+          <div class="hold-amount tnum">${money(holdingAmount(h))}</div>
+          <button class="icon-btn" title="Sửa" data-action="edit-holding" data-id="${h.id}">✎</button>
+          <button class="icon-btn btn-danger" title="Xóa" data-action="delete-holding" data-id="${h.id}">✕</button>
+        </div>
+      </div>
+    `).join('')}
+  </div>
+  ${renderFooter()}
+  `;
+}
+
+/* ============ MONTH ============ */
+function renderEditLog(){
+  const log = appData.editLog || [];
+  return `
+  <div class="crumb no-print"><a data-action="go-home">Trang chủ</a> <span>/</span> <span>Lịch sử chỉnh sửa</span></div>
+  <h1 class="page-title">Lịch sử chỉnh sửa</h1>
+  <div class="section">
+    ${log.length===0 ? `<div class="empty-state">Chưa có hoạt động nào được ghi lại.</div>` : log.map(e=>`
+      <div class="hold-item">
+        <div>
+          <div class="hold-name">${esc(e.message)}</div>
+          <div class="hold-note">${esc(e.monthLabel)} · ${esc(e.yearLabel)}</div>
+        </div>
+        <div class="hold-note tnum">${esc(e.ts)}</div>
+      </div>
+    `).join('')}
+  </div>
+  ${renderFooter()}
+  `;
+}
+
+function renderMonth(yearKey, monthKey){
+  const year = appData.years[yearKey];
+  if(!year) return renderHome();
+  const monthDef = MONTH_DEFS.find(m=>m.key===monthKey);
+  const monthObj = year.months[monthKey];
+  const locked = !!monthObj.locked;
+  const canEdit = isAdmin && !locked;
+  const txs = [...monthObj.transactions].sort((a,b)=> (a.date||'').localeCompare(b.date||''));
+  const t = monthTotals(year, monthKey);
+  return `
+  <div class="crumb no-print"><a data-action="go-home">Các năm học</a> <span>/</span> <a data-action="open-year" data-year="${yearKey}">${esc(year.label)}</a> <span>/</span> <span>${monthDef.label}</span></div>
+  <h1 class="page-title">${monthDef.label} — Năm học ${esc(year.label)} ${locked?'<span class="pill" style="background:var(--chi-soft);color:var(--chi);font-size:11.5px;vertical-align:middle;">🔒 Đã khóa</span>':''}</h1>
+  ${isAdmin ? `<div class="row no-print" style="margin:8px 0 4px;flex-wrap:wrap;gap:8px;">
+    <button class="btn btn-sm" data-action="toggle-lock" data-year="${yearKey}" data-month="${monthKey}">${locked?'🔓 Mở khóa':'🔒 Khóa tháng này'}</button>
+    <button class="btn btn-sm" data-action="export-excel-month" data-year="${yearKey}" data-month="${monthKey}">📊 Xuất Excel</button>
+    <button class="btn btn-sm" data-action="open-print-preview" data-scope="month" data-year="${yearKey}" data-month="${monthKey}">Xem trước &amp; In</button>
+  </div>` : ''}
+  ${locked ? `<p class="subtitle">Tháng này đã được khóa để tránh sửa nhầm sau khi chốt sổ. Bấm "Mở khóa" nếu cần chỉnh sửa lại.</p>` : ''}
+
+  <div class="summary">
+    <div class="summary-grid">
+      <div><div class="stat-label">Tổng thu</div><div class="stat-value thu tnum">${money(t.thu)}</div></div>
+      <div><div class="stat-label">Tổng chi</div><div class="stat-value chi tnum">${money(t.chi)}</div></div>
+      <div><div class="stat-label">Còn lại</div><div class="stat-value balance tnum">${money(t.conLai)}</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2>Danh sách giao dịch</h2>
+    </div>
+    ${(txs.length===0 && !canEdit) ? `<div class="empty-state">Chưa có giao dịch nào trong tháng này.</div>` : `
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>STT</th><th>Ngày</th><th>Nội dung</th><th style="text-align:right">Thu</th><th style="text-align:right">Chi</th>
+        ${canEdit ? '<th></th>' : ''}
+      </tr></thead>
+      <tbody>
+        ${txs.map((tx,i)=>{
+          const isEditing = canEdit && editingTx && editingTx.txId===tx.id;
+          if(isEditing){
+            return `
+            <tr class="edit-row">
+              <td class="stt">${i+1}</td>
+              <td><input type="date" class="qa-input qa-date" value="${tx.date}"/></td>
+              <td>
+                <input type="text" class="qa-input qa-content" value="${esc(tx.content)}" placeholder="Nội dung"/>
+                <input type="text" class="qa-input qa-note qa-note-sub" value="${esc(tx.note||'')}" placeholder="Ghi chú (không bắt buộc)"/>
+                <label class="qa-tk-label"><input type="checkbox" class="qa-tk" ${(tx.location||'tienmat')==='taikhoan'?'checked':''}/> Tài khoản</label>
+              </td>
+              <td class="num"><input type="number" class="qa-input qa-thu" value="${tx.type==='thu'?Math.round(tx.amount/1000):''}" placeholder="nghìn đ"/></td>
+              <td class="num"><input type="number" class="qa-input qa-chi" value="${tx.type==='chi'?Math.round(tx.amount/1000):''}" placeholder="nghìn đ"/></td>
+              <td class="actions no-print">
+                <button class="icon-btn" title="Lưu (Enter)" data-action="save-edit-tx" data-year="${yearKey}" data-month="${monthKey}" data-id="${tx.id}">✓</button>
+                <button class="icon-btn" title="Hủy (Esc)" data-action="cancel-edit-tx">↩</button>
+                <button class="icon-btn btn-danger" title="Xóa giao dịch" data-action="delete-tx" data-year="${yearKey}" data-month="${monthKey}" data-id="${tx.id}">✕</button>
+              </td>
+            </tr>`;
+          }
+          return `
+          <tr class="${canEdit && i===txs.length-1 ? 'tx-last':''}">
+            <td class="stt">${i+1}</td>
+            <td class="${canEdit?'editable-cell':''}" ${canEdit?`data-action="start-edit-tx" data-year="${yearKey}" data-month="${monthKey}" data-id="${tx.id}"`:''}>${dispDate(tx.date)}</td>
+            <td class="${canEdit?'editable-cell':''}" ${canEdit?`data-action="start-edit-tx" data-year="${yearKey}" data-month="${monthKey}" data-id="${tx.id}"`:''}>
+              <div class="${tx.type==='thu'?'content-thu':''}">${esc(tx.content)}</div>
+              ${tx.note ? `<div class="note-sub">${esc(tx.note)}</div>` : ''}
+            </td>
+            <td class="num thu tnum ${canEdit?'editable-cell':''}" ${canEdit?`data-action="start-edit-tx" data-year="${yearKey}" data-month="${monthKey}" data-id="${tx.id}"`:''}>${tx.type==='thu'? money(tx.amount):''}</td>
+            <td class="num chi tnum ${canEdit?'editable-cell':''}" ${canEdit?`data-action="start-edit-tx" data-year="${yearKey}" data-month="${monthKey}" data-id="${tx.id}"`:''}>${tx.type==='chi'? money(tx.amount):''}</td>
+            ${canEdit ? `<td class="actions no-print"></td>` : ''}
+          </tr>`;
+        }).join('')}
+        ${canEdit ? `
+        <tr class="add-row no-print ${txs.length===0?'always':''}">
+          <td class="stt">+</td>
+          <td><input type="date" class="qa-input qa-date" value="${todayISO()}"/></td>
+          <td>
+            <input type="text" class="qa-input qa-content" placeholder="Nhập nội dung..."/>
+            <input type="text" class="qa-input qa-note qa-note-sub" placeholder="Ghi chú (không bắt buộc)"/>
+            <label class="qa-tk-label"><input type="checkbox" class="qa-tk"/> Tài khoản</label>
+          </td>
+          <td class="num"><input type="number" class="qa-input qa-thu" placeholder="nghìn đ" min="0"/></td>
+          <td class="num"><input type="number" class="qa-input qa-chi" placeholder="nghìn đ" min="0"/></td>
+          <td class="actions"><button class="icon-btn qa-save" title="Lưu (Enter)" data-action="qa-save" data-year="${yearKey}" data-month="${monthKey}">✓</button></td>
+        </tr>` : ''}
+        <tr class="total-row">
+          <td></td><td></td>
+          <td style="font-weight:700;">Tổng cộng</td>
+          <td class="num thu tnum" style="font-weight:700;">${money(t.thu)}</td>
+          <td class="num chi tnum" style="font-weight:700;">${money(t.chi)}</td>
+          ${canEdit ? '<td></td>' : ''}
+        </tr>
+      </tbody>
+    </table></div>
+    `}
+  </div>
+  ${renderFooter()}
+  `;
+}
+
+function renderFooter(){
+  return '';
+}
+
+/* ============ PRINT PREVIEW ============ */
+function renderPrintPreview(){
+  const {scope, yearKey, monthKey} = currentView;
+  const year = appData.years[yearKey];
+  if(!year) return renderHome();
+  let titleLine2 = '';
+  let bodyHtml = '';
+  if(scope==='month'){
+    const monthDef = MONTH_DEFS.find(m=>m.key===monthKey);
+    const txs = [...year.months[monthKey].transactions].sort((a,b)=> (a.date||'').localeCompare(b.date||''));
+    const t = monthTotals(year, monthKey);
+    titleLine2 = `${monthDef.label} — Năm học ${esc(year.label)}`;
+    bodyHtml = `
+      <table class="print-table">
+        <thead><tr><th>STT</th><th>Ngày</th><th>Nội dung</th><th>Thu</th><th>Chi</th></tr></thead>
+        <tbody>
+          ${txs.length? txs.map((tx,i)=>`<tr>
+            <td>${i+1}</td><td>${dispDate(tx.date)}</td>
+            <td>${esc(tx.content)}${tx.note?`<div style="color:#777;font-size:11px;">${esc(tx.note)}</div>`:''}</td>
+            <td class="num">${tx.type==='thu'?money(tx.amount):''}</td>
+            <td class="num">${tx.type==='chi'?money(tx.amount):''}</td>
+          </tr>`).join('') : `<tr><td colspan="5" style="text-align:center;color:#888;">Không có giao dịch</td></tr>`}
+          <tr style="font-weight:700;background:#f2f1ec;">
+            <td colspan="2"></td><td>Tổng cộng</td>
+            <td class="num">${money(t.thu)}</td><td class="num">${money(t.chi)}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="print-summary">
+        <div>Còn lại: <b>${money(t.conLai)}</b></div>
+      </div>
+    `;
+  } else {
+    const t = yearTotals(year);
+    titleLine2 = `Báo cáo bàn giao quỹ — Năm học ${esc(year.label)}`;
+    const fundItems = appData.holdings;
+    const fundSum = holdingsTotal();
+    bodyHtml = `
+      <table class="print-table">
+        <thead><tr><th>Tháng</th><th>Thu</th><th>Chi</th><th>Còn lại tháng</th></tr></thead>
+        <tbody>
+          ${MONTH_DEFS.map(m=>{ const mt=monthTotals(year,m.key); return `<tr><td>${m.label}</td><td class="num">${money(mt.thu)}</td><td class="num">${money(mt.chi)}</td><td class="num">${money(mt.conLai)}</td></tr>`; }).join('')}
+          <tr style="font-weight:700;"><td>Tổng cộng</td><td class="num">${money(t.thu)}</td><td class="num">${money(t.chi)}</td><td class="num">${money(t.conLai)}</td></tr>
+        </tbody>
+      </table>
+      <p style="font-weight:700;font-size:13px;margin:18px 0 6px;">Quỹ hiện đang được giữ tại</p>
+      <table class="print-table">
+        <thead><tr><th>Khoản</th><th>Số tiền</th><th>Ghi chú</th></tr></thead>
+        <tbody>
+          ${fundItems.map(h=>`<tr><td>${esc(h.name)}${(h.kind==='cash'||h.kind==='bank')?' (tự động)':''}</td><td class="num">${money(holdingAmount(h))}</td><td>${esc(h.note||'')}</td></tr>`).join('')}
+          <tr style="font-weight:700;background:#f2f1ec;"><td>Tổng cộng</td><td class="num">${money(fundSum)}</td><td></td></tr>
+        </tbody>
+      </table>
+    `;
+  }
+  return `
+  <div class="no-print print-toolbar">
+    <button class="btn btn-sm" data-action="close-print-preview">← Quay lại</button>
+    <button class="btn btn-sm btn-primary" data-action="do-print">In ngay</button>
+  </div>
+  <div class="print-sheet">
+    <div class="print-head">
+      <div class="print-title">${esc(appData.title)}</div>
+      <div class="print-sub">${titleLine2}</div>
+      <div class="print-date">Ngày in: ${todayFull()}</div>
+    </div>
+    ${bodyHtml}
+    <div class="sig-grid">
+      <div class="sig-box"><div class="role">THỦ QUỸ</div><div class="sig-space"></div><div class="line"></div><div class="hint">(Ký, ghi rõ họ tên)</div></div>
+      <div class="sig-box"><div class="role">LỚP TRƯỞNG</div><div class="sig-space"></div><div class="line"></div><div class="hint">(Ký, ghi rõ họ tên)</div></div>
+    </div>
+  </div>
+  `;
+}
+
+/* ============ MODALS ============ */
+function openModal(html){ document.getElementById('modal-root').innerHTML = `<div class="modal-overlay" data-action="modal-overlay">${html}</div>`; }
+
+function mLogin(){
+  openModal(`
+    <div class="modal-box" data-stop>
+      <h3>Đăng nhập Admin</h3>
+      <div class="field"><label>Mật khẩu</label><input type="password" id="in-pass" placeholder="Nhập mật khẩu"/></div>
+      <div class="modal-msg" id="login-err"></div>
+      <div class="modal-actions">
+        <button class="btn" data-action="close-modal">Hủy</button>
+        <button class="btn btn-primary" id="login-submit-btn" data-action="submit-login">Đăng nhập</button>
+      </div>
+    </div>
+  `);
+  document.getElementById('in-pass').focus();
+}
+async function submitLogin(){
+  const v = document.getElementById('in-pass').value;
+  const btn = document.getElementById('login-submit-btn');
+  if(btn) btn.disabled = true;
+  try{
+    const res = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({password:v}) });
+    if(res.ok){
+      isAdmin = true; adminPassword = v;
+      computeAndApplyTheme(); closeModal(); render();
+      showToast('Đã đăng nhập với quyền Admin.');
+    } else {
+      document.getElementById('login-err').textContent = 'Sai mật khẩu, vui lòng thử lại.';
+    }
+  }catch(e){
+    document.getElementById('login-err').textContent = 'Không kết nối được máy chủ, thử lại sau.';
+  }
+  if(btn) btn.disabled = false;
+}
+
+function mSettings(){
+  const bg = appData.settings.background;
+  openModal(`
+    <div class="modal-box" data-stop>
+      <h3>Cài đặt</h3>
+      <div class="field"><label>Tên/nhãn sổ (hiện dưới chữ "SỔ THU - CHI")</label><input type="text" id="set-title" value="${esc(appData.title)}" placeholder="VD: Lớp K31, Cá nhân, Nhóm ABC..."/></div>
+      <div class="field"><label>Đổi mật khẩu Admin (để trống nếu không đổi)</label><input type="password" id="np1" placeholder="Mật khẩu mới"/></div>
+      <div class="field"><input type="password" id="np2" placeholder="Nhập lại mật khẩu mới"/></div>
+      <div class="modal-msg" id="set-err"></div>
+      <div class="modal-actions">
+        <button class="btn" data-action="close-modal">Hủy</button>
+        <button class="btn btn-primary" data-action="submit-settings">Lưu</button>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:18px 0;"/>
+      <div class="field">
+        <label>Ảnh nền giao diện (mọi người đều thấy, chỉ Admin đổi được)</label>
+        <div class="row" style="gap:8px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-sm" data-action="trigger-bg-upload">🖼️ Tải ảnh nền lên</button>
+          ${bg ? `<button type="button" class="btn btn-sm btn-ghost" data-action="remove-background">Xóa ảnh nền</button>` : ''}
+        </div>
+        <input type="file" id="bg-file-input" accept="image/*" style="display:none" onchange="handleBackgroundFile(this)"/>
+      </div>
+      ${bg ? `
+      <div class="field">
+        <label>Độ mờ ảnh nền: <span id="bg-opacity-val">${bg.opacity}%</span></label>
+        <input type="range" id="bg-opacity" min="10" max="100" value="${bg.opacity}"
+          oninput="document.getElementById('bg-opacity-val').textContent=this.value+'%'; previewBackgroundLive();"
+          onchange="commitBackgroundSettings();"/>
+      </div>
+      <div class="field">
+        <label>Độ sáng/tối: <span id="bg-bright-val">${bg.brightness}%</span></label>
+        <input type="range" id="bg-brightness" min="30" max="150" value="${bg.brightness}"
+          oninput="document.getElementById('bg-bright-val').textContent=this.value+'%'; previewBackgroundLive();"
+          onchange="commitBackgroundSettings();"/>
+      </div>
+      <div class="field">
+        <label>Cách hiển thị</label>
+        <select id="bg-mode" onchange="previewBackgroundLive(); commitBackgroundSettings();" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;background:var(--surface-alt);color:var(--ink);">
+          <option value="cover" ${bg.mode==='cover'?'selected':''}>Vừa khung (cover)</option>
+          <option value="contain" ${bg.mode==='contain'?'selected':''}>Vừa đủ ảnh (contain)</option>
+          <option value="repeat" ${bg.mode==='repeat'?'selected':''}>Lặp lại (repeat)</option>
+        </select>
+      </div>
+      ` : `<p class="helptext">Chưa có ảnh nền nào. Tải ảnh lên để tùy chỉnh giao diện — bảng số liệu vẫn luôn nền trắng/tối rõ ràng để dễ đọc.</p>`}
+      <hr style="border:none;border-top:1px solid var(--border);margin:18px 0;"/>
+      <div class="field">
+        <label>Sao lưu &amp; khôi phục dữ liệu (file Excel)</label>
+        <div class="row" style="gap:8px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-sm" data-action="export-backup">💾 Tải bản sao lưu (.xlsx)</button>
+          <button type="button" class="btn btn-sm" data-action="trigger-import">📥 Khôi phục từ file</button>
+        </div>
+        <input type="file" id="import-file-input" accept=".xlsx,.xls" style="display:none" onchange="handleImportFile(this)"/>
+        <div class="helptext">Tải file Excel về máy để lưu phòng hờ (đổi thiết bị, mất dữ liệu...) — có thể mở bằng Excel để xem lại. Khi cần khôi phục, chọn lại đúng file này — dữ liệu hiện tại sẽ bị thay thế hoàn toàn.</div>
+      </div>
+    </div>
+  `);
+}
+async function submitSettings(){
+  const title = document.getElementById('set-title').value.trim();
+  const a=document.getElementById('np1').value, b=document.getElementById('np2').value;
+  if(!title){ document.getElementById('set-err').textContent='Vui lòng nhập tên/nhãn sổ.'; return; }
+  if(a || b){
+    if(a.length<4){ document.getElementById('set-err').textContent='Mật khẩu mới cần ít nhất 4 ký tự.'; return; }
+    if(a!==b){ document.getElementById('set-err').textContent='Hai mật khẩu chưa khớp.'; return; }
+    try{
+      const res = await fetch('/api/change-password', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ oldPassword: adminPassword, newPassword: a })
+      });
+      if(!res.ok){ document.getElementById('set-err').textContent='Đổi mật khẩu thất bại (có thể bạn cần đăng nhập lại).'; return; }
+      adminPassword = a; // cập nhật mật khẩu đang dùng trong phiên này để các lần lưu sau vẫn đúng
+    }catch(e){
+      document.getElementById('set-err').textContent='Không kết nối được máy chủ, thử lại sau.';
+      return;
+    }
+  }
+  appData.title = title;
+  closeModal(); commit(); showToast('Đã lưu cài đặt.');
+}
+
+function exportBackup(){
+  if(typeof XLSX==='undefined'){ showToast('Chưa tải được thư viện Excel, vui lòng thử lại.'); return; }
+  try{
+    const wb = XLSX.utils.book_new();
+
+    const txRows = [['NamBatDau','NamHoc','ThangKey','Thang','Ngay','NoiDung','GhiChu','Loai','SoTien','NoiGiu']];
+    Object.keys(appData.years).forEach(yk=>{
+      const year = appData.years[yk];
+      MONTH_DEFS.forEach(m=>{
+        year.months[m.key].transactions.forEach(tx=>{
+          txRows.push([year.startYear, year.label, m.key, m.label, tx.date, tx.content, tx.note||'', tx.type, tx.amount, tx.location||'tienmat']);
+        });
+      });
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(txRows), 'GiaoDich');
+
+    const holdRows = [['Loai','Ten','SoTien','GhiChu']];
+    appData.holdings.forEach(h=>{
+      const val = (h.kind==='cash'||h.kind==='bank') ? (h.opening||0) : (h.amount||0);
+      holdRows.push([h.kind, h.name, val, h.note||'']);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(holdRows), 'Quy');
+
+    const lockRows = [['NamBatDau','ThangKey','Khoa']];
+    Object.keys(appData.years).forEach(yk=>{
+      const year = appData.years[yk];
+      MONTH_DEFS.forEach(m=>{ if(year.months[m.key].locked) lockRows.push([year.startYear, m.key, 'TRUE']); });
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(lockRows), 'ThangKhoa');
+
+    const settingRows = [['Ten'], [appData.title]]; // Mật khẩu không nằm trong file sao lưu vì lý do an toàn — đổi mật khẩu qua mục Cài đặt.
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(settingRows), 'CaiDat');
+
+    XLSX.writeFile(wb, `SoThuChi_SaoLuu_${todayISO()}.xlsx`);
+    showToast('Đã tải file sao lưu Excel.');
+  }catch(e){
+    showToast('Không tải được file sao lưu.');
+  }
+}
+function handleImportFile(inputEl){
+  const file = inputEl.files && inputEl.files[0];
+  if(!file) return;
+  if(typeof XLSX==='undefined'){ showToast('Chưa tải được thư viện Excel, vui lòng thử lại.'); return; }
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    let wb;
+    try{ wb = XLSX.read(new Uint8Array(e.target.result), {type:'array', cellDates:true}); }
+    catch(err){ showToast('Không đọc được file — file có thể bị hỏng.'); return; }
+    const txSheet = wb.Sheets['GiaoDich'];
+    if(!txSheet){ showToast('File Excel không đúng định dạng sao lưu (thiếu sheet GiaoDich).'); return; }
+    const txRows = XLSX.utils.sheet_to_json(txSheet, {header:1}).slice(1);
+    const newYears = {};
+    txRows.forEach(r=>{
+      if(!r || r[0]==null || r[0]==='') return;
+      const [startYear,,monthKey,,dateVal,content,note,type,amount,location] = r;
+      const yk = String(Math.round(Number(startYear)));
+      if(!newYears[yk]) newYears[yk] = makeYear(Number(startYear));
+      if(!newYears[yk].months[monthKey]) return;
+      let dateStr = dateVal;
+      if(dateVal instanceof Date){ const off=dateVal.getTimezoneOffset(); dateStr = new Date(dateVal.getTime()-off*60000).toISOString().slice(0,10); }
+      else if(typeof dateVal==='number'){ const d=XLSX.SSF.parse_date_code(dateVal); dateStr=`${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`; }
+      newYears[yk].months[monthKey].transactions.push({
+        id:genId(), date:String(dateStr||''), content:content||'', note:note||'',
+        type: type==='thu'?'thu':'chi', amount:Number(amount)||0, location: location==='taikhoan'?'taikhoan':'tienmat'
+      });
+    });
+    if(Object.keys(newYears).length===0){ showToast('Không tìm thấy dữ liệu năm học nào trong file.'); return; }
+
+    const newHoldings = [];
+    const holdSheet = wb.Sheets['Quy'];
+    if(holdSheet){
+      XLSX.utils.sheet_to_json(holdSheet, {header:1}).slice(1).forEach(r=>{
+        if(!r || !r[1]) return;
+        const [kind,name,amount,note] = r;
+        if(kind==='cash'||kind==='bank'){ newHoldings.push({id:genId(), kind, name:name||(kind==='cash'?'Tiền mặt':'Tài khoản'), opening:Number(amount)||0, note:note||''}); }
+        else{ newHoldings.push({id:genId(), kind:'other', name:name||'', amount:Number(amount)||0, note:note||''}); }
+      });
+    }
+    const lockSheet = wb.Sheets['ThangKhoa'];
+    if(lockSheet){
+      XLSX.utils.sheet_to_json(lockSheet, {header:1}).slice(1).forEach(r=>{
+        if(!r || r[0]==null) return;
+        const [startYear, monthKey, khoa] = r;
+        const yk = String(Math.round(Number(startYear)));
+        if(newYears[yk] && newYears[yk].months[monthKey] && String(khoa).toUpperCase()==='TRUE'){ newYears[yk].months[monthKey].locked = true; }
+      });
+    }
+    let title = appData.title;
+    const setSheet = wb.Sheets['CaiDat'];
+    if(setSheet){
+      const rows = XLSX.utils.sheet_to_json(setSheet, {header:1});
+      if(rows[1]){ title = rows[1][0] || title; }
+    }
+
+    mConfirm('Khôi phục sẽ THAY THẾ toàn bộ dữ liệu hiện tại bằng dữ liệu trong file Excel này (không gồm mật khẩu). Bạn chắc chắn chứ?', ()=>{
+      appData = { title, settings:{background: appData.settings.background||null}, years:newYears, holdings:newHoldings, editLog:[] };
+      normalizeData();
+      editingTx = null;
+      currentView = {type:'home'};
+      closeModal();
+      commit();
+      showToast('Đã khôi phục dữ liệu từ file Excel.');
+    });
+  };
+  reader.readAsArrayBuffer(file);
+  inputEl.value = '';
+}
+
+function monthSheetRows(year, monthKey){
+  const txs = [...year.months[monthKey].transactions].sort((a,b)=> (a.date||'').localeCompare(b.date||''));
+  const rows = [['STT','Ngày','Nội dung','Ghi chú','Thu','Chi']];
+  txs.forEach((tx,i)=> rows.push([i+1, dispDate(tx.date), tx.content, tx.note||'', tx.type==='thu'?tx.amount:'', tx.type==='chi'?tx.amount:'']));
+  const mt = monthTotals(year, monthKey);
+  rows.push(['','','Tổng cộng','', mt.thu, mt.chi]);
+  return rows;
+}
+function exportMonthExcel(yearKey, monthKey){
+  if(typeof XLSX==='undefined'){ showToast('Chưa tải được thư viện Excel, vui lòng thử lại.'); return; }
+  const year = appData.years[yearKey];
+  const monthDef = MONTH_DEFS.find(m=>m.key===monthKey);
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(monthSheetRows(year, monthKey));
+  XLSX.utils.book_append_sheet(wb, ws, monthDef.label);
+  XLSX.writeFile(wb, `ThuChi_${monthDef.label.replace(' ','')}_${year.label.replace(/\s/g,'')}.xlsx`);
+}
+function exportYearExcel(yearKey){
+  if(typeof XLSX==='undefined'){ showToast('Chưa tải được thư viện Excel, vui lòng thử lại.'); return; }
+  const year = appData.years[yearKey];
+  const wb = XLSX.utils.book_new();
+  const t = yearTotals(year);
+  const summaryRows = [['Tháng','Thu','Chi','Còn lại']];
+  MONTH_DEFS.forEach(m=>{ const mt=monthTotals(year, m.key); summaryRows.push([m.label, mt.thu, mt.chi, mt.conLai]); });
+  summaryRows.push(['Tổng cộng', t.thu, t.chi, t.conLai]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryRows), 'Tong ket');
+  MONTH_DEFS.forEach(m=>{
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(monthSheetRows(year, m.key)), m.label.replace('Tháng','Th'));
+  });
+  XLSX.writeFile(wb, `ThuChi_NamHoc_${year.label.replace(/\s/g,'')}.xlsx`);
+}
+
+function mNewYear(){
+  const suggested = Math.max(...sortedYearKeys().map(Number), 2025) + 1;
+  openModal(`
+    <div class="modal-box" data-stop>
+      <h3>Tạo năm học mới</h3>
+      <div class="field"><label>Năm bắt đầu (VD: 2027 nghĩa là năm học 2027 - 2028)</label>
+        <input type="number" id="in-year" value="${suggested}"/></div>
+      <div class="modal-msg" id="year-err"></div>
+      <div class="modal-actions">
+        <button class="btn" data-action="close-modal">Hủy</button>
+        <button class="btn btn-primary" data-action="submit-new-year">Tạo năm học</button>
+      </div>
+    </div>
+  `);
+}
+function submitNewYear(){
+  const y = parseInt(document.getElementById('in-year').value,10);
+  if(!y || y<2000 || y>2100){ document.getElementById('year-err').textContent='Năm không hợp lệ.'; return; }
+  if(appData.years[String(y)]){ document.getElementById('year-err').textContent='Năm học này đã tồn tại.'; return; }
+  appData.years[String(y)] = makeYear(y);
+  closeModal(); currentView={type:'year', yearKey:String(y)}; commit(); showToast('Đã tạo năm học mới.');
+}
+
+function mTx(yearKey, monthKey, txId){
+  const year = appData.years[yearKey];
+  const tx = txId ? year.months[monthKey].transactions.find(t=>t.id===txId) : null;
+  const mnum = monthYearNum(year.startYear, monthKey);
+  const defaultDate = `${mnum}-${String(MONTH_DEFS.find(m=>m.key===monthKey).num).padStart(2,'0')}-01`;
+  const type = tx ? tx.type : 'thu';
+  openModal(`
+    <div class="modal-box" data-stop>
+      <h3>${tx? 'Sửa giao dịch':'Thêm giao dịch'}</h3>
+      <div class="field"><label>Loại</label>
+        <div class="seg">
+          <button type="button" class="${type==='thu'?'active thu-a':''}" data-action="set-tx-type" data-type="thu">Thu</button>
+          <button type="button" class="${type==='chi'?'active chi-a':''}" data-action="set-tx-type" data-type="chi">Chi</button>
+        </div>
+        <input type="hidden" id="tx-type" value="${type}"/>
+      </div>
+      <div class="field"><label>Ngày</label><input type="date" id="tx-date" value="${tx?tx.date:defaultDate}"/></div>
+      <div class="field"><label>Nội dung</label><input type="text" id="tx-content" value="${esc(tx?tx.content:'')}" placeholder="VD: Mua nước uống họp lớp"/></div>
+      <div class="field">
+        <label>Số tiền (nhập theo đơn vị nghìn đồng)</label>
+        <input type="number" id="tx-amount" value="${tx?Math.round(tx.amount/1000):''}" min="0" placeholder="VD: nhập 10000"/>
+        <div class="helptext" id="tx-amount-preview">= ${tx? money(tx.amount) : '0 đ'}</div>
+      </div>
+      <div class="field"><label>Ghi chú (không bắt buộc)</label><input type="text" id="tx-note" value="${esc(tx?tx.note||'':'')}"/></div>
+      <div class="modal-msg" id="tx-err"></div>
+      <div class="modal-actions">
+        <button class="btn" data-action="close-modal">Hủy</button>
+        <button class="btn btn-primary" data-action="submit-tx" data-year="${yearKey}" data-month="${monthKey}" data-id="${tx?tx.id:''}">Lưu</button>
+      </div>
+    </div>
+  `);
+  const amtInput = document.getElementById('tx-amount');
+  const preview = document.getElementById('tx-amount-preview');
+  amtInput.addEventListener('input', ()=>{
+    const v = parseFloat(amtInput.value);
+    preview.textContent = '= ' + money((v||0)*1000);
+  });
+  amtInput.focus();
+}
+function submitTx(yearKey, monthKey, txId){
+  const type = document.getElementById('tx-type').value;
+  const date = document.getElementById('tx-date').value;
+  const content = document.getElementById('tx-content').value.trim();
+  const rawInput = parseFloat(document.getElementById('tx-amount').value);
+  const amount = (rawInput||0) * 1000;
+  const note = document.getElementById('tx-note').value.trim();
+  if(!content){ document.getElementById('tx-err').textContent='Vui lòng nhập nội dung.'; return; }
+  if(!date){ document.getElementById('tx-err').textContent='Vui lòng chọn ngày.'; return; }
+  if(!amount || amount<=0){ document.getElementById('tx-err').textContent='Số tiền phải lớn hơn 0.'; return; }
+  const year = appData.years[yearKey];
+  const list = year.months[monthKey].transactions;
+  if(txId){
+    const tx = list.find(t=>t.id===txId);
+    Object.assign(tx, {type,date,content,amount,note});
+  } else {
+    list.push({id:genId(), type, date, content, amount, note});
+  }
+  closeModal(); commit(); showToast('Đã lưu giao dịch.');
+}
+function isMonthLocked(yearKey, monthKey){
+  const y = appData.years[yearKey];
+  return !!(y && y.months[monthKey] && y.months[monthKey].locked);
+}
+function toggleMonthLock(yearKey, monthKey){
+  const m = appData.years[yearKey].months[monthKey];
+  m.locked = !m.locked;
+  if(m.locked){
+    appData.editLog = (appData.editLog||[]).filter(e=> !(e.yearKey===yearKey && e.monthKey===monthKey));
+    showToast('Đã khóa tháng — lịch sử chỉnh sửa của tháng này cũng đã được dọn.');
+  } else {
+    showToast('Đã mở khóa tháng.');
+  }
+  editingTx = null;
+  commit();
+}
+
+function deleteTx(yearKey, monthKey, txId){
+  if(isMonthLocked(yearKey, monthKey)){ showToast('Tháng này đã bị khóa.'); return; }
+  const year = appData.years[yearKey];
+  const tx = year.months[monthKey].transactions.find(t=>t.id===txId);
+  mConfirm('Xóa giao dịch này? Hành động này không thể hoàn tác.', ()=>{
+    year.months[monthKey].transactions = year.months[monthKey].transactions.filter(t=>t.id!==txId);
+    if(editingTx && editingTx.txId===txId) editingTx=null;
+    if(tx) logEdit(yearKey, monthKey, `Xóa giao dịch: ${tx.content} (${tx.type==='thu'?'+':'-'}${money(tx.amount)})`);
+    closeModal(); commit(); showToast('Đã xóa giao dịch.');
+  });
+}
+
+function autoSaveEditRow(row){
+  const btn = row.querySelector('[data-action="save-edit-tx"]');
+  if(!btn || !editingTx) return;
+  saveEditTx(btn.dataset.year, btn.dataset.month, btn.dataset.id, row);
+}
+// Dùng khi lưu do "click ra ngoài" — lưu dữ liệu ngay nhưng KHÔNG vẽ lại trang ngay lập tức,
+// để không làm gián đoạn/hụt mất cú nhấp chuột đang bay tới đích khác (ví dụ mở dòng sửa khác).
+function autoSaveEditRowSilent(row){
+  if(!editingTx) return;
+  const {yearKey, monthKey, txId} = editingTx;
+  if(isMonthLocked(yearKey, monthKey)){ editingTx=null; return; }
+  const date = row.querySelector('.qa-date').value;
+  const content = row.querySelector('.qa-content').value.trim();
+  const thuRaw = parseFloat(row.querySelector('.qa-thu').value);
+  const chiRaw = parseFloat(row.querySelector('.qa-chi').value);
+  const note = row.querySelector('.qa-note').value.trim();
+  const tkEl = row.querySelector('.qa-tk');
+  const location = (tkEl && tkEl.checked) ? 'taikhoan' : 'tienmat';
+  editingTx = null;
+  if(!date || !content || !(thuRaw>0 || chiRaw>0)){
+    return; // thiếu dữ liệu hợp lệ -> không lưu, chỉ thoát khỏi chế độ sửa
+  }
+  const type = thuRaw>0 ? 'thu' : 'chi';
+  const amount = (thuRaw>0 ? thuRaw : chiRaw) * 1000;
+  const year = appData.years[yearKey];
+  const tx = year && year.months[monthKey].transactions.find(t=>t.id===txId);
+  if(tx){ Object.assign(tx, {date, content, type, amount, location, note}); logEdit(yearKey, monthKey, `Sửa giao dịch: ${content} (${type==='thu'?'+':'-'}${money(amount)})`); persist(); }
+}
+
+function qaSaveFromRow(row, yearKey, monthKey){
+  if(isMonthLocked(yearKey, monthKey)){ showToast('Tháng này đã bị khóa.'); return; }
+  const date = row.querySelector('.qa-date').value;
+  const content = row.querySelector('.qa-content').value.trim();
+  const thuRaw = parseFloat(row.querySelector('.qa-thu').value);
+  const chiRaw = parseFloat(row.querySelector('.qa-chi').value);
+  const note = row.querySelector('.qa-note').value.trim();
+  const location = row.querySelector('.qa-tk').checked ? 'taikhoan' : 'tienmat';
+  if(!date){ showToast('Vui lòng chọn ngày.'); row.querySelector('.qa-date').focus(); return; }
+  if(!content){ showToast('Vui lòng nhập nội dung.'); row.querySelector('.qa-content').focus(); return; }
+  let type, amount;
+  if(thuRaw>0){ type='thu'; amount=thuRaw*1000; }
+  else if(chiRaw>0){ type='chi'; amount=chiRaw*1000; }
+  else { showToast('Vui lòng nhập số tiền vào cột Thu hoặc Chi.'); row.querySelector('.qa-thu').focus(); return; }
+  const year = appData.years[yearKey];
+  year.months[monthKey].transactions.push({id:genId(), date, content, type, amount, location, note});
+  logEdit(yearKey, monthKey, `Thêm giao dịch: ${content} (${type==='thu'?'+':'-'}${money(amount)})`);
+  pendingFocusQuickAdd = true;
+  commit();
+  showToast('Đã thêm giao dịch.');
+}
+
+function saveEditTx(yearKey, monthKey, txId, row){
+  if(isMonthLocked(yearKey, monthKey)){ showToast('Tháng này đã bị khóa.'); editingTx=null; render(); return; }
+  const date = row.querySelector('.qa-date').value;
+  const content = row.querySelector('.qa-content').value.trim();
+  const thuRaw = parseFloat(row.querySelector('.qa-thu').value);
+  const chiRaw = parseFloat(row.querySelector('.qa-chi').value);
+  const note = row.querySelector('.qa-note').value.trim();
+  const location = row.querySelector('.qa-tk').checked ? 'taikhoan' : 'tienmat';
+  if(!date){ showToast('Vui lòng chọn ngày.'); return; }
+  if(!content){ showToast('Vui lòng nhập nội dung.'); return; }
+  let type, amount;
+  if(thuRaw>0){ type='thu'; amount=thuRaw*1000; }
+  else if(chiRaw>0){ type='chi'; amount=chiRaw*1000; }
+  else { showToast('Vui lòng nhập số tiền vào cột Thu hoặc Chi.'); return; }
+  const year = appData.years[yearKey];
+  const tx = year.months[monthKey].transactions.find(t=>t.id===txId);
+  Object.assign(tx, {date, content, type, amount, location, note});
+  logEdit(yearKey, monthKey, `Sửa giao dịch: ${content} (${type==='thu'?'+':'-'}${money(amount)})`);
+  editingTx = null;
+  commit();
+  showToast('Đã cập nhật giao dịch.');
+}
+function cancelEditTx(){ editingTx = null; render(); }
+
+function mHolding(holdId){
+  const h = holdId ? appData.holdings.find(x=>x.id===holdId) : null;
+  const isAuto = h && (h.kind==='cash' || h.kind==='bank');
+  openModal(`
+    <div class="modal-box" data-stop>
+      <h3>${h ? (isAuto?'Điều chỉnh số dư':'Sửa khoản') : 'Thêm khoản giữ tiền quỹ'}</h3>
+      <div class="field"><label>Tên khoản${isAuto?'':' (tự đặt)'}</label><input type="text" id="h-name" value="${esc(h?h.name:'')}" placeholder="VD: Ngân hàng Vietcombank, Hạnh giữ hộ..." ${isAuto?'':''}/></div>
+      <div class="field">
+        <label>${isAuto? 'Số dư hiện tại (đ)':'Số tiền (đ)'}</label>
+        <input type="number" id="h-amount" value="${h? holdingAmount(h) : ''}" min="0"/>
+        ${isAuto? `<div class="helptext">Mục này tự cộng/trừ theo giao dịch Thu/Chi. Nếu bạn sửa số này, hệ thống sẽ lấy đó làm mốc và tiếp tục tự cộng/trừ theo giao dịch mới từ nay.</div>`:''}
+      </div>
+      <div class="field"><label>Ghi chú (không bắt buộc)</label><input type="text" id="h-note" value="${esc(h?h.note||'':'')}"/></div>
+      <div class="modal-msg" id="h-err"></div>
+      <div class="modal-actions">
+        <button class="btn" data-action="close-modal">Hủy</button>
+        <button class="btn btn-primary" data-action="submit-holding" data-id="${h?h.id:''}">Lưu</button>
+      </div>
+    </div>
+  `);
+}
+function submitHolding(holdId){
+  const name = document.getElementById('h-name').value.trim();
+  const amount = parseFloat(document.getElementById('h-amount').value);
+  const note = document.getElementById('h-note').value.trim();
+  if(!name){ document.getElementById('h-err').textContent='Vui lòng nhập tên khoản.'; return; }
+  if(isNaN(amount) || amount<0){ document.getElementById('h-err').textContent='Số tiền không hợp lệ.'; return; }
+  if(holdId){
+    const h = appData.holdings.find(x=>x.id===holdId);
+    if(h.kind==='cash' || h.kind==='bank'){
+      // Người dùng sửa số dư HIỆN TẠI trực tiếp -> quy đổi ngược lại thành số dư ban đầu (opening) để giao dịch tiếp tục cộng/trừ đúng từ mốc mới.
+      const locKey = h.kind==='cash' ? 'tienmat' : 'taikhoan';
+      h.opening = amount - locationNet(locKey);
+      h.name = name; h.note = note;
+    } else {
+      Object.assign(h, {name, amount, note});
+    }
+  } else {
+    appData.holdings.push({id:genId(), kind:'other', name, amount, note});
+  }
+  closeModal(); commit(); showToast('Đã lưu.');
+}
+function deleteHolding(holdId){
+  const h = appData.holdings.find(x=>x.id===holdId);
+  if(h && (h.kind==='cash'||h.kind==='bank')){ showToast('Không thể xóa mục Tiền mặt / Tài khoản.'); return; }
+  mConfirm('Xóa khoản này?', ()=>{
+    appData.holdings = appData.holdings.filter(x=>x.id!==holdId);
+    closeModal(); commit(); showToast('Đã xóa.');
+  });
+}
+
+function mConfirm(msg, onYes){
+  openModal(`
+    <div class="modal-box" data-stop>
+      <h3>Xác nhận</h3>
+      <p style="font-size:14px;color:var(--ink-muted);margin:0 0 6px;">${esc(msg)}</p>
+      <div class="modal-actions">
+        <button class="btn" data-action="close-modal">Hủy</button>
+        <button class="btn btn-primary" style="background:var(--chi);border-color:var(--chi)" id="confirm-yes">Xóa</button>
+      </div>
+    </div>
+  `);
+  document.getElementById('confirm-yes').onclick = onYes;
+}
+
+/* ============ EVENT DELEGATION ============ */
+function bindGlobalActions(){
+  document.getElementById('app').onclick = (e)=>{
+    const el = e.target.closest('[data-action]');
+    if(!el) return;
+    const a = el.dataset.action;
+    if(a==='go-home'){ currentView={type:'home'}; editingTx=null; render(); }
+    else if(a==='toggle-theme'){ toggleTheme(); }
+    else if(a==='go-back'){ editingTx=null; goBack(); }
+    else if(a==='open-year'){ currentView={type:'year', yearKey:el.dataset.year}; editingTx=null; render(); }
+    else if(a==='open-month'){ currentView={type:'month', yearKey:el.dataset.year, monthKey:el.dataset.month}; editingTx=null; render(); }
+    else if(a==='open-login'){ mLogin(); }
+    else if(a==='logout'){ isAdmin=false; adminPassword=null; computeAndApplyTheme(); render(); showToast('Đã chuyển sang chế độ xem.'); }
+    else if(a==='open-settings'){ mSettings(); }
+    else if(a==='open-new-year'){ mNewYear(); }
+    else if(a==='edit-tx'){ mTx(el.dataset.year, el.dataset.month, el.dataset.id); }
+    else if(a==='start-edit-tx'){ if(isMonthLocked(el.dataset.year, el.dataset.month)){ showToast('Tháng này đã bị khóa.'); } else { editingTx={yearKey:el.dataset.year, monthKey:el.dataset.month, txId:el.dataset.id}; render(); } }
+    else if(a==='save-edit-tx'){ saveEditTx(el.dataset.year, el.dataset.month, el.dataset.id, el.closest('tr.edit-row')); }
+    else if(a==='cancel-edit-tx'){ cancelEditTx(); }
+    else if(a==='delete-tx'){ deleteTx(el.dataset.year, el.dataset.month, el.dataset.id); }
+    else if(a==='open-new-holding'){ mHolding(null); }
+    else if(a==='edit-holding'){ mHolding(el.dataset.id); }
+    else if(a==='delete-holding'){ deleteHolding(el.dataset.id); }
+    else if(a==='open-funds'){ currentView={type:'funds'}; render(); }
+    else if(a==='open-editlog'){ currentView={type:'editlog'}; render(); }
+    else if(a==='toggle-lock'){ toggleMonthLock(el.dataset.year, el.dataset.month); }
+    else if(a==='open-print-preview'){ currentView={type:'print-preview', scope:el.dataset.scope, yearKey:el.dataset.year, monthKey:el.dataset.month}; editingTx=null; render(); }
+    else if(a==='export-excel-year'){ exportYearExcel(el.dataset.year); }
+    else if(a==='export-excel-month'){ exportMonthExcel(el.dataset.year, el.dataset.month); }
+    else if(a==='close-print-preview'){ exitPrintPreview(); }
+    else if(a==='do-print'){ window.print(); }
+    else if(a==='qa-save'){ qaSaveFromRow(el.closest('tr.add-row'), el.dataset.year, el.dataset.month); }
+    else if(a==='print'){ window.print(); }
+  };
+  document.getElementById('app').oninput = (e)=>{
+    if(e.target.classList.contains('qa-thu') && e.target.value){
+      const row=e.target.closest('tr'); const chi=row.querySelector('.qa-chi'); if(chi) chi.value='';
+    }
+    if(e.target.classList.contains('qa-chi') && e.target.value){
+      const row=e.target.closest('tr'); const thu=row.querySelector('.qa-thu'); if(thu) thu.value='';
+    }
+  };
+  document.getElementById('app').onfocusout = (e)=>{
+    if(!e.target.classList || !(e.target.classList.contains('qa-input') || e.target.classList.contains('qa-tk'))) return;
+    const row = e.target.closest('tr.edit-row');
+    if(!row) return; // chỉ tự động lưu cho dòng đang sửa, không áp dụng cho dòng thêm mới
+    const next = e.relatedTarget;
+    if(next && row.contains(next)) return; // vẫn còn trong cùng dòng (đang Tab qua ô khác) — chưa cần lưu
+    autoSaveEditRowSilent(row);
+    // Vẽ lại trang ở tick kế tiếp — nếu cú nhấp chuột đã tự vẽ lại trang rồi thì lệnh này chỉ vô hại, dư thừa.
+    setTimeout(render, 0);
+  };
+  document.getElementById('app').onkeydown = (e)=>{
+    if(e.key==='Enter' && e.target.classList.contains('qa-input')){
+      e.preventDefault();
+      const addRow = e.target.closest('tr.add-row');
+      const editRow = e.target.closest('tr.edit-row');
+      if(addRow){ const btn = addRow.querySelector('.qa-save'); qaSaveFromRow(addRow, btn.dataset.year, btn.dataset.month); }
+      else if(editRow){ const btn = editRow.querySelector('[data-action="save-edit-tx"]'); saveEditTx(btn.dataset.year, btn.dataset.month, btn.dataset.id, editRow); }
+    }
+    if(e.key==='Escape' && e.target.classList.contains('qa-input')){
+      const editRow = e.target.closest('tr.edit-row');
+      if(editRow){ cancelEditTx(); }
+    }
+  };
+  document.getElementById('modal-root').onclick = (e)=>{
+    const el = e.target.closest('[data-action]');
+    const overlay = e.target.closest('[data-action="modal-overlay"]');
+    if(e.target.dataset && e.target.dataset.action==='modal-overlay'){ closeModal(); return; }
+    if(!el) return;
+    const a = el.dataset.action;
+    if(a==='close-modal'){ closeModal(); }
+    else if(a==='submit-login'){ submitLogin(); }
+    else if(a==='submit-settings'){ submitSettings(); }
+    else if(a==='submit-new-year'){ submitNewYear(); }
+    else if(a==='submit-tx'){ submitTx(el.dataset.year, el.dataset.month, el.dataset.id||null); }
+    else if(a==='submit-holding'){ submitHolding(el.dataset.id||null); }
+    else if(a==='export-backup'){ exportBackup(); }
+    else if(a==='trigger-import'){ document.getElementById('import-file-input').click(); }
+    else if(a==='trigger-bg-upload'){ document.getElementById('bg-file-input').click(); }
+    else if(a==='remove-background'){ removeBackground(); }
+    else if(a==='set-tx-type'){
+      document.getElementById('tx-type').value = el.dataset.type;
+      el.parentElement.querySelectorAll('button').forEach(b=> b.classList.remove('active','thu-a','chi-a'));
+      el.classList.add('active', el.dataset.type==='thu'?'thu-a':'chi-a');
+    }
+  };
+  // Enter key submits login
+  document.addEventListener('keydown', (e)=>{
+    if(e.key==='Enter'){
+      const loginInput = document.getElementById('in-pass');
+      if(loginInput && document.activeElement===loginInput){ submitLogin(); }
+    }
+  });
+}
+
+/* ============ INIT ============ */
+(async function init(){
+  loadTheme();
+  await loadData();
+  computeAndApplyTheme();
+  applyBackground();
+  if(systemDarkMQ){
+    systemDarkMQ.addEventListener ? systemDarkMQ.addEventListener('change', computeAndApplyTheme) : systemDarkMQ.addListener(computeAndApplyTheme);
+  }
+  render();
+})();
+</script>
+</body>
+</html>
