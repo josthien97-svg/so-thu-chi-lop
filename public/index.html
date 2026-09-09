@@ -437,6 +437,16 @@ function yearTotals(year){
   MONTH_DEFS.forEach(m=>{ const t=monthTotals(year, m.key); thu+=t.thu; chi+=t.chi; });
   return {thu, chi, conLai: thu-chi};
 }
+// Cộng dồn từ Tháng 8 (đầu năm học) đến hết tháng đang xem — KHÔNG cần tự nhập tay "chuyển từ tháng trước".
+function cumulativeToMonth(year, monthKey){
+  let thu=0, chi=0;
+  for(const m of MONTH_DEFS){
+    const t = monthTotals(year, m.key);
+    thu += t.thu; chi += t.chi;
+    if(m.key===monthKey) break;
+  }
+  return {thu, chi, conLai: thu-chi};
+}
 function allTimeTotals(){
   let thu=0, chi=0;
   Object.values(appData.years).forEach(year=>{ const t=yearTotals(year); thu+=t.thu; chi+=t.chi; });
@@ -689,6 +699,7 @@ function renderMonth(yearKey, monthKey){
   const canEdit = isAdmin && !locked;
   const txs = [...monthObj.transactions].sort((a,b)=> (a.date||'').localeCompare(b.date||''));
   const t = monthTotals(year, monthKey);
+  const cum = cumulativeToMonth(year, monthKey);
   return `
   <div class="crumb no-print"><a data-action="go-home">Các năm học</a> <span>/</span> <a data-action="open-year" data-year="${yearKey}">${esc(year.label)}</a> <span>/</span> <span>${monthDef.label}</span></div>
   <h1 class="page-title">${monthDef.label} — Năm học ${esc(year.label)} ${locked?'<span class="pill" style="background:var(--chi-soft);color:var(--chi);font-size:11.5px;vertical-align:middle;">🔒 Đã khóa</span>':''}</h1>
@@ -701,9 +712,10 @@ function renderMonth(yearKey, monthKey){
 
   <div class="summary">
     <div class="summary-grid">
-      <div><div class="stat-label">Tổng thu</div><div class="stat-value thu tnum">${money(t.thu)}</div></div>
-      <div><div class="stat-label">Tổng chi</div><div class="stat-value chi tnum">${money(t.chi)}</div></div>
-      <div><div class="stat-label">Còn lại</div><div class="stat-value balance tnum">${money(t.conLai)}</div></div>
+      <div><div class="stat-label">Thu (tháng này)</div><div class="stat-value thu tnum">${money(t.thu)}</div></div>
+      <div><div class="stat-label">Chi (tháng này)</div><div class="stat-value chi tnum">${money(t.chi)}</div></div>
+      <div><div class="stat-label">Còn lại (tháng này)</div><div class="stat-value tnum" style="color:var(--ink-muted)">${money(t.conLai)}</div></div>
+      <div><div class="stat-label">Số dư lũy kế đến hết tháng này</div><div class="stat-value balance tnum">${money(cum.conLai)}</div></div>
     </div>
   </div>
 
