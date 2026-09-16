@@ -113,6 +113,9 @@
   .year-card.add-year-card{display:flex;align-items:center;justify-content:center;border-style:dashed;color:var(--ink-muted);min-height:64px;}
   .year-card.add-year-card .plus{font-size:32px;font-weight:300;line-height:1;}
   .year-card.add-year-card:hover{color:var(--accent);border-color:var(--accent);}
+  .month-tile.add-tile{display:flex;align-items:center;justify-content:center;border-style:dashed;color:var(--ink-muted);min-height:64px;cursor:pointer;}
+  .month-tile.add-tile .plus{font-size:28px;font-weight:300;line-height:1;}
+  .month-tile.add-tile:hover{color:var(--accent);border-color:var(--accent);}
 
   .month-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
   .month-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;cursor:pointer;transition:.15s;}
@@ -252,11 +255,12 @@ let currentView = {type:'home'};
 let editingTx = null; // {yearKey, monthKey, txId}
 let theme = 'light';
 let adminPassword = null; // chỉ giữ trong bộ nhớ khi đang đăng nhập, không lưu vào máy
+let printShowFundBreakdown = true; // Tùy chọn hiện/ẩn phần "Cơ cấu quỹ" khi xem trước & in (chỉ dùng khi đang xem, không lưu vào dữ liệu)
 
 function genId(){ return 'id'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 
 function emptyMonths(){
-  const o={}; MONTH_DEFS.forEach(m=> o[m.key]={transactions:[]}); return o;
+  const o={}; MONTH_DEFS.forEach(m=> o[m.key]={transactions:[], created:false}); return o;
 }
 function makeYear(startYear){
   return { startYear, label:`${startYear} - ${startYear+1}`, months:emptyMonths() };
@@ -299,6 +303,17 @@ function normalizeData(){
   }
   appData.holdings.forEach(h=>{ if(!h.kind) h.kind='other'; });
   if(!Array.isArray(appData.editLog)) appData.editLog = [];
+  // Vá dữ liệu cũ (trước khi có tính năng "tự tạo từng tháng"): tháng nào chưa có cờ created,
+  // nếu đã có giao dịch hoặc đã khóa thì coi là đã tạo; ngược lại (tháng trống, chưa dùng) coi là chưa tạo.
+  Object.values(appData.years).forEach(y=>{
+    MONTH_DEFS.forEach(m=>{
+      const mo = y.months[m.key];
+      if(!mo){ y.months[m.key] = {transactions:[], created:false}; return; }
+      if(typeof mo.created !== 'boolean'){
+        mo.created = (mo.transactions && mo.transactions.length>0) || !!mo.locked;
+      }
+    });
+  });
 }
 async function loadData(){
   try{
@@ -427,7 +442,8 @@ function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;
 function monthYearNum(startYear, monthKey){ const m=MONTH_DEFS.find(x=>x.key===monthKey); return m.num>=8? startYear : startYear+1; }
 function sortedYearKeys(){ return Object.keys(appData.years).sort((a,b)=> a-b); }
 function monthTotals(year, monthKey){
-  const txs = year.months[monthKey].transactions;
+  const mo = year.months[monthKey];
+  const txs = mo ? mo.transactions : [];
   let thu=0, chi=0;
   txs.forEach(t=> t.type==='thu' ? thu+=Number(t.amount)||0 : chi+=Number(t.amount)||0);
   return {thu, chi, conLai: thu-chi};
@@ -437,15 +453,35 @@ function yearTotals(year){
   MONTH_DEFS.forEach(m=>{ const t=monthTotals(year, m.key); thu+=t.thu; chi+=t.chi; });
   return {thu, chi, conLai: thu-chi};
 }
-// Cộng dồn từ Tháng 8 (đầu năm học) đến hết tháng đang xem — KHÔNG cần tự nhập tay "chuyển từ tháng trước".
-function cumulativeToMonth(year, monthKey){
-  let thu=0, chi=0;
+// Quỹ đầu năm = quỹ cuối năm học trước đó (đệ quy ngược về trước), hoặc 0 nếu không có năm trước.
+function yearOpening(yearKey){
+  const y = appData.years[yearKey];
+  if(!y) return 0;
+  const prevKey = String(y.startYear - 1);
+  const prevYear = appData.years[prevKey];
+  if(!prevYear) return 0;
+  return yearOpening(prevKey) + yearTotals(prevYear).conLai;
+}
+function yearClosing(yearKey){
+  const y = appData.years[yearKey];
+  if(!y) return 0;
+  return yearOpening(yearKey) + yearTotals(y).conLai;
+}
+// Quỹ đầu tháng = quỹ đầu năm + cộng dồn Thu-Chi của các tháng TRƯỚC tháng này trong cùng năm.
+function monthOpening(yearKey, monthKey){
+  const year = appData.years[yearKey];
+  let sum = yearOpening(yearKey);
   for(const m of MONTH_DEFS){
-    const t = monthTotals(year, m.key);
-    thu += t.thu; chi += t.chi;
     if(m.key===monthKey) break;
+    const t = monthTotals(year, m.key);
+    sum += t.thu - t.chi;
   }
-  return {thu, chi, conLai: thu-chi};
+  return sum;
+}
+function monthClosing(yearKey, monthKey){
+  const year = appData.years[yearKey];
+  const t = monthTotals(year, monthKey);
+  return monthOpening(yearKey, monthKey) + t.thu - t.chi;
 }
 function allTimeTotals(){
   let thu=0, chi=0;
@@ -556,10 +592,10 @@ function renderHome(){
   ${(keys.length===0 && !isAdmin) ? `<div class="section"><div class="empty-state">Chưa có năm học nào. Vui lòng chờ Admin tạo dữ liệu.</div></div>` : `
   <div class="card-grid">
     ${keys.map(k=>{
-      const y=appData.years[k]; const t=yearTotals(y);
+      const y=appData.years[k];
       return `<div class="year-card" data-action="open-year" data-year="${k}">
         <div class="yl">${esc(y.label)}</div>
-        <div class="yb">Còn lại: <b class="tnum">${money(t.conLai)}</b></div>
+        <div class="yb">Quỹ hiện còn: <b class="tnum">${money(yearClosing(k))}</b></div>
       </div>`;
     }).join('')}
     ${isAdmin ? `<div class="year-card add-year-card" data-action="open-new-year" title="Tạo năm học mới"><span class="plus">+</span></div>` : ''}
@@ -573,6 +609,9 @@ function renderYear(yearKey){
   const year = appData.years[yearKey];
   if(!year) return renderHome();
   const t = yearTotals(year);
+  const opening = yearOpening(yearKey);
+  const closing = opening + t.conLai;
+  const createdMonths = MONTH_DEFS.filter(m => year.months[m.key] && year.months[m.key].created);
   return `
   <div class="crumb no-print"><a data-action="go-home">Các năm học</a> <span>/</span> <span>${esc(year.label)}</span></div>
   <div class="row between" style="margin-bottom:4px;">
@@ -582,9 +621,10 @@ function renderYear(yearKey){
 
   <div class="summary">
     <div class="summary-grid">
-      <div><div class="stat-label">Tổng thu cả năm</div><div class="stat-value thu tnum">${money(t.thu)}</div></div>
-      <div><div class="stat-label">Tổng chi cả năm</div><div class="stat-value chi tnum">${money(t.chi)}</div></div>
-      <div><div class="stat-label">Còn lại</div><div class="stat-value balance tnum">${money(t.conLai)}</div></div>
+      <div><div class="stat-label">Tổng quỹ đầu năm</div><div class="stat-value muted tnum">${money(opening)}</div></div>
+      <div><div class="stat-label">Tổng thu</div><div class="stat-value thu tnum">${money(t.thu)}</div></div>
+      <div><div class="stat-label">Tổng chi</div><div class="stat-value chi tnum">${money(t.chi)}</div></div>
+      <div><div class="stat-label">Tổng quỹ hiện còn</div><div class="stat-value balance tnum">${money(closing)}</div></div>
     </div>
   </div>
 
@@ -592,8 +632,9 @@ function renderYear(yearKey){
     <div class="section-head">
       <h2>Các tháng</h2>
     </div>
+    ${createdMonths.length===0 && !isAdmin ? `<div class="empty-state">Chưa có tháng nào được tạo.</div>` : `
     <div class="month-grid">
-      ${MONTH_DEFS.map(m=>{
+      ${createdMonths.map(m=>{
         const mt = monthTotals(year, m.key);
         return `<div class="month-tile" data-action="open-month" data-year="${yearKey}" data-month="${m.key}">
           <div class="ml">${m.label}</div>
@@ -601,7 +642,9 @@ function renderYear(yearKey){
           <div class="mrow chi"><span>Chi</span><b class="tnum">${money(mt.chi)}</b></div>
         </div>`;
       }).join('')}
+      ${isAdmin && createdMonths.length<12 ? `<div class="month-tile add-tile" data-action="open-new-month" data-year="${yearKey}" title="Tạo tháng mới"><span class="plus">+</span></div>` : ''}
     </div>
+    `}
   </div>
 
   ${renderFooter()}
@@ -695,11 +738,17 @@ function renderMonth(yearKey, monthKey){
   if(!year) return renderHome();
   const monthDef = MONTH_DEFS.find(m=>m.key===monthKey);
   const monthObj = year.months[monthKey];
+  if(!monthObj || !monthObj.created){
+    // Tháng chưa được tạo — quay về trang năm (phòng trường hợp truy cập thẳng vào 1 tháng chưa tạo)
+    currentView = {type:'year', yearKey};
+    return renderYear(yearKey);
+  }
   const locked = !!monthObj.locked;
   const canEdit = isAdmin && !locked;
   const txs = [...monthObj.transactions].sort((a,b)=> (a.date||'').localeCompare(b.date||''));
   const t = monthTotals(year, monthKey);
-  const cum = cumulativeToMonth(year, monthKey);
+  const opening = monthOpening(yearKey, monthKey);
+  const closing = opening + t.thu - t.chi;
   return `
   <div class="crumb no-print"><a data-action="go-home">Các năm học</a> <span>/</span> <a data-action="open-year" data-year="${yearKey}">${esc(year.label)}</a> <span>/</span> <span>${monthDef.label}</span></div>
   <h1 class="page-title">${monthDef.label} — Năm học ${esc(year.label)} ${locked?'<span class="pill" style="background:var(--chi-soft);color:var(--chi);font-size:11.5px;vertical-align:middle;">🔒 Đã khóa</span>':''}</h1>
@@ -712,10 +761,10 @@ function renderMonth(yearKey, monthKey){
 
   <div class="summary">
     <div class="summary-grid">
-      <div><div class="stat-label">Thu (tháng này)</div><div class="stat-value thu tnum">${money(t.thu)}</div></div>
-      <div><div class="stat-label">Chi (tháng này)</div><div class="stat-value chi tnum">${money(t.chi)}</div></div>
-      <div><div class="stat-label">Còn lại (tháng này)</div><div class="stat-value tnum" style="color:var(--ink-muted)">${money(t.conLai)}</div></div>
-      <div><div class="stat-label">Số dư lũy kế đến hết tháng này</div><div class="stat-value balance tnum">${money(cum.conLai)}</div></div>
+      <div><div class="stat-label">Quỹ đầu tháng</div><div class="stat-value muted tnum">${money(opening)}</div></div>
+      <div><div class="stat-label">Thu</div><div class="stat-value thu tnum">${money(t.thu)}</div></div>
+      <div><div class="stat-label">Chi</div><div class="stat-value chi tnum">${money(t.chi)}</div></div>
+      <div><div class="stat-label">Quỹ hiện còn</div><div class="stat-value balance tnum">${money(closing)}</div></div>
     </div>
   </div>
 
@@ -807,6 +856,8 @@ function renderPrintPreview(){
     const monthDef = MONTH_DEFS.find(m=>m.key===monthKey);
     const txs = [...year.months[monthKey].transactions].sort((a,b)=> (a.date||'').localeCompare(b.date||''));
     const t = monthTotals(year, monthKey);
+    const opening = monthOpening(yearKey, monthKey);
+    const closing = opening + t.thu - t.chi;
     titleLine2 = `${monthDef.label} — Năm học ${esc(year.label)}`;
     bodyHtml = `
       <table class="print-table">
@@ -825,36 +876,49 @@ function renderPrintPreview(){
         </tbody>
       </table>
       <div class="print-summary">
-        <div>Còn lại: <b>${money(t.conLai)}</b></div>
+        <div>Quỹ đầu tháng: <b>${money(opening)}</b></div>
+        <div>Quỹ hiện còn: <b>${money(closing)}</b></div>
       </div>
     `;
   } else {
     const t = yearTotals(year);
+    const opening = yearOpening(yearKey);
+    const closing = opening + t.conLai;
+    const createdMonths = MONTH_DEFS.filter(m => year.months[m.key] && year.months[m.key].created);
     titleLine2 = `Báo cáo bàn giao quỹ — Năm học ${esc(year.label)}`;
     const fundItems = appData.holdings;
     const fundSum = holdingsTotal();
     bodyHtml = `
+      <p style="font-size:13px;margin:0 0 10px;">Quỹ đầu năm: <b>${money(opening)}</b></p>
       <table class="print-table">
         <thead><tr><th>Tháng</th><th>Thu</th><th>Chi</th><th>Còn lại tháng</th></tr></thead>
         <tbody>
-          ${MONTH_DEFS.map(m=>{ const mt=monthTotals(year,m.key); return `<tr><td>${m.label}</td><td class="num">${money(mt.thu)}</td><td class="num">${money(mt.chi)}</td><td class="num">${money(mt.conLai)}</td></tr>`; }).join('')}
+          ${createdMonths.length? createdMonths.map(m=>{ const mt=monthTotals(year,m.key); return `<tr><td>${m.label}</td><td class="num">${money(mt.thu)}</td><td class="num">${money(mt.chi)}</td><td class="num">${money(mt.conLai)}</td></tr>`; }).join('') : `<tr><td colspan="4" style="text-align:center;color:#888;">Chưa có tháng nào được tạo</td></tr>`}
           <tr style="font-weight:700;"><td>Tổng cộng</td><td class="num">${money(t.thu)}</td><td class="num">${money(t.chi)}</td><td class="num">${money(t.conLai)}</td></tr>
         </tbody>
       </table>
-      <p style="font-weight:700;font-size:13px;margin:18px 0 6px;">Quỹ hiện đang được giữ tại</p>
+      <p style="font-size:13px;margin:10px 0 0;text-align:right;">Quỹ hiện còn (đầu năm + cả năm): <b>${money(closing)}</b></p>
+      ${printShowFundBreakdown ? `
+      <p style="font-weight:700;font-size:13px;margin:18px 0 6px;">Cơ cấu quỹ</p>
       <table class="print-table">
         <thead><tr><th>Khoản</th><th>Số tiền</th><th>Ghi chú</th></tr></thead>
         <tbody>
-          ${fundItems.map(h=>`<tr><td>${esc(h.name)}${(h.kind==='cash'||h.kind==='bank')?' (tự động)':''}</td><td class="num">${money(holdingAmount(h))}</td><td>${esc(h.note||'')}</td></tr>`).join('')}
+          ${fundItems.map(h=>`<tr><td>${esc(h.name)}</td><td class="num">${money(holdingAmount(h))}</td><td>${esc(h.note||'')}</td></tr>`).join('')}
           <tr style="font-weight:700;background:#f2f1ec;"><td>Tổng cộng</td><td class="num">${money(fundSum)}</td><td></td></tr>
         </tbody>
       </table>
+      ` : ''}
     `;
   }
   return `
   <div class="no-print print-toolbar">
     <button class="btn btn-sm" data-action="close-print-preview">← Quay lại</button>
-    <button class="btn btn-sm btn-primary" data-action="do-print">In ngay</button>
+    <div class="row" style="gap:14px;">
+      ${scope==='year' ? `<label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-muted);cursor:pointer;user-select:none;">
+        <input type="checkbox" id="toggle-fund-breakdown" ${printShowFundBreakdown?'checked':''} onchange="printShowFundBreakdown=this.checked; render();"/> Hiện Cơ cấu quỹ
+      </label>` : ''}
+      <button class="btn btn-sm btn-primary" data-action="do-print">In ngay</button>
+    </div>
   </div>
   <div class="print-sheet">
     <div class="print-head">
@@ -1117,11 +1181,12 @@ function exportYearExcel(yearKey){
   const year = appData.years[yearKey];
   const wb = XLSX.utils.book_new();
   const t = yearTotals(year);
+  const createdMonths = MONTH_DEFS.filter(m => year.months[m.key] && year.months[m.key].created);
   const summaryRows = [['Tháng','Thu','Chi','Còn lại']];
-  MONTH_DEFS.forEach(m=>{ const mt=monthTotals(year, m.key); summaryRows.push([m.label, mt.thu, mt.chi, mt.conLai]); });
+  createdMonths.forEach(m=>{ const mt=monthTotals(year, m.key); summaryRows.push([m.label, mt.thu, mt.chi, mt.conLai]); });
   summaryRows.push(['Tổng cộng', t.thu, t.chi, t.conLai]);
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryRows), 'Tong ket');
-  MONTH_DEFS.forEach(m=>{
+  createdMonths.forEach(m=>{
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(monthSheetRows(year, m.key)), m.label.replace('Tháng','Th'));
   });
   XLSX.writeFile(wb, `ThuChi_NamHoc_${year.label.replace(/\s/g,'')}.xlsx`);
@@ -1148,6 +1213,34 @@ function submitNewYear(){
   if(appData.years[String(y)]){ document.getElementById('year-err').textContent='Năm học này đã tồn tại.'; return; }
   appData.years[String(y)] = makeYear(y);
   closeModal(); currentView={type:'year', yearKey:String(y)}; commit(); showToast('Đã tạo năm học mới.');
+}
+
+function mNewMonth(yearKey){
+  const year = appData.years[yearKey];
+  const available = MONTH_DEFS.filter(m=> !(year.months[m.key] && year.months[m.key].created));
+  if(available.length===0){ showToast('Năm học này đã tạo đủ 12 tháng.'); return; }
+  openModal(`
+    <div class="modal-box" data-stop>
+      <h3>Tạo tháng mới</h3>
+      <div class="field"><label>Chọn tháng</label>
+        <select id="in-month" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;background:var(--surface-alt);color:var(--ink);">
+          ${available.map(m=>`<option value="${m.key}">${m.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="modal-msg" id="month-err"></div>
+      <div class="modal-actions">
+        <button class="btn" data-action="close-modal">Hủy</button>
+        <button class="btn btn-primary" data-action="submit-new-month" data-year="${yearKey}">Tạo tháng</button>
+      </div>
+    </div>
+  `);
+}
+function submitNewMonth(yearKey){
+  const key = document.getElementById('in-month').value;
+  const year = appData.years[yearKey];
+  if(!year.months[key]) year.months[key] = {transactions:[], created:false};
+  year.months[key].created = true;
+  closeModal(); currentView={type:'month', yearKey, monthKey:key}; commit(); showToast('Đã tạo tháng mới.');
 }
 
 function mTx(yearKey, monthKey, txId){
@@ -1393,6 +1486,7 @@ function bindGlobalActions(){
     else if(a==='logout'){ isAdmin=false; adminPassword=null; computeAndApplyTheme(); render(); showToast('Đã chuyển sang chế độ xem.'); }
     else if(a==='open-settings'){ mSettings(); }
     else if(a==='open-new-year'){ mNewYear(); }
+    else if(a==='open-new-month'){ mNewMonth(el.dataset.year); }
     else if(a==='edit-tx'){ mTx(el.dataset.year, el.dataset.month, el.dataset.id); }
     else if(a==='start-edit-tx'){ if(isMonthLocked(el.dataset.year, el.dataset.month)){ showToast('Tháng này đã bị khóa.'); } else { editingTx={yearKey:el.dataset.year, monthKey:el.dataset.month, txId:el.dataset.id}; render(); } }
     else if(a==='save-edit-tx'){ saveEditTx(el.dataset.year, el.dataset.month, el.dataset.id, el.closest('tr.edit-row')); }
@@ -1453,6 +1547,7 @@ function bindGlobalActions(){
     else if(a==='submit-login'){ submitLogin(); }
     else if(a==='submit-settings'){ submitSettings(); }
     else if(a==='submit-new-year'){ submitNewYear(); }
+    else if(a==='submit-new-month'){ submitNewMonth(el.dataset.year); }
     else if(a==='submit-tx'){ submitTx(el.dataset.year, el.dataset.month, el.dataset.id||null); }
     else if(a==='submit-holding'){ submitHolding(el.dataset.id||null); }
     else if(a==='export-backup'){ exportBackup(); }
